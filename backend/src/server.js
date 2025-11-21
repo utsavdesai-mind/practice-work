@@ -1,6 +1,5 @@
 const express = require('express');
-const authRoutes = require('./routes/auth.route');
-const userRoutes = require('./routes/user.route');
+const appRoutes = require('./routes/index');
 const errorHandler = require('./middlewares/errorHandler')
 const cors = require('cors');
 require('dotenv').config();
@@ -13,8 +12,7 @@ app.use(express.json());
 
 connectDB();
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api', appRoutes);
 
 app.use(errorHandler);
 

@@ -2,7 +2,6 @@ import { useState, useEffect, useContext } from "react";
 import { getAllUsers } from "../api/userService";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { handleError } from "../utils/handleError";
 
 export default function UserList() {
   const [users, setUsers] = useState([]);
@@ -12,9 +11,8 @@ export default function UserList() {
   const fetchUsers = async () => {
     try {
       const res = await getAllUsers();
-      setUsers(res.data.users);
+      setUsers(res.data.data);
     } catch {
-      handleError(err, () => {});
       logout();
       navigate("/login");
     }
