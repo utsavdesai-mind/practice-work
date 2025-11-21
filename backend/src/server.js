@@ -1,4 +1,7 @@
 const express = require('express');
+const authRoutes = require('./routes/auth.route');
+const userRoutes = require('./routes/user.route');
+const errorHandler = require('./middlewares/errorHandler')
 const cors = require('cors');
 require('dotenv').config();
 
@@ -8,8 +11,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect to Database
 connectDB();
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+
+app.use(errorHandler);
 
 app.get('/', (req, res) => {
   res.send("Server + MongoDB Connected Successfully 🚀");
