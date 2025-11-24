@@ -6,69 +6,33 @@
   font-family: Arial, sans-serif;
 }
 
+/* Body Default for Full App */
 body {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 320px;
-  min-height: 100vh;
   background: #f4f6f8;
   color: #333;
 }
 
-/* Centered Container */
-.container {
-  width: 350px;
-  margin: 80px auto;
+/* Center Only Auth Pages */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Auth Box */
+.auth-box {
+  width: 380px;
   background: #fff;
   border-radius: 10px;
-  padding: 25px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
 /* Headings */
-h2 {
+.auth-box h2 {
   text-align: center;
-  margin-bottom: 20px;
-}
-
-/* Input Fields */
-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  margin: 10px 0;
-  font-size: 14px;
-}
-
-/* Buttons */
-button {
-  width: 100%;
-  padding: 12px;
-  background: #007bff;
-  border: none;
-  color: #fff;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 6px;
-  margin-top: 10px;
-}
-
-button:hover {
-  background: #0056b3;
-}
-
-/* User List */
-ul {
-  list-style-type: none;
-  margin-top: 10px;
-}
-
-li {
-  padding: 10px;
-  background: #e9eef3;
-  border-radius: 6px;
-  margin: 6px 0;
+  margin-bottom: 25px;
+  font-size: 22px;
+  font-weight: bold;
 }

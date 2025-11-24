@@ -1,12 +1,54 @@
-const userService = require('../services/user.service');
-const ApiError = require('../utils/ApiError');
-const { successResponse } = require('../utils/response');
+const ApiError = require("../utils/ApiError");
+const { successResponse } = require("../utils/response");
+const userService = require("../services/user.service");
 
-exports.getAllUsers = async (req, res, next) => {
+exports.createUser = async (req, res, next) => {
+  try {
+    const user = await userService.createUser(req.body);
+    return successResponse(res, "User created successfully", user, 201);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getUsers = async (req, res, next) => {
   try {
     const users = await userService.getUsers();
-    return successResponse(res, "Get all users successfully", users, 200);
+    return successResponse(res, "Users fetched successfully", users, 200);
   } catch (err) {
-    next(new ApiError(500, err.message));
+    next(err);
+  }
+};
+
+exports.getUserById = async (req, res, next) => {
+  try {
+    const user = await userService.getUserById(req.params.id);
+    if (!user) throw new ApiError(404, "User not found");
+
+    return successResponse(res, "User fetched successfully", user, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateUser = async (req, res, next) => {
+  try {
+    const user = await userService.updateUser(req.params.id, req.body);
+    if (!user) throw new ApiError(404, "User not found");
+
+    return successResponse(res, "User updated successfully", user, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteUser = async (req, res, next) => {
+  try {
+    const user = await userService.deleteUser(req.params.id);
+    if (!user) throw new ApiError(404, "User not found");
+
+    return successResponse(res, "User deleted successfully", null, 200);
+  } catch (err) {
+    next(err);
   }
 };

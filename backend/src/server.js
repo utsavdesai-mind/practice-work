@@ -5,12 +5,17 @@ const cors = require('cors');
 require('dotenv').config();
 
 const connectDB = require('./config/db');
+const seedRoles = require('./config/seedRoles');
+const seedUsers = require('./config/seedUsers');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-connectDB();
+connectDB().then(async () => {
+  await seedRoles();
+  await seedUsers();
+});
 
 app.use('/api', appRoutes);
 
