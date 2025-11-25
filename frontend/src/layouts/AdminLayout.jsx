@@ -7,14 +7,14 @@ import { AuthContext } from "../context/AuthContext";
 const { Header, Sider, Content } = Layout;
 
 export default function AdminLayout({ children }) {
-  const { logout } = useContext(AuthContext);
+  const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   return (
     <Layout style={{ height: "100vh" }}>
       <Sider>
         <div style={{ color: "white", padding: 20, fontSize: 18 }}>
-          Admin Panel
+          {user.company?.name || "Admin Dashboard"}
         </div>
         <Menu theme="dark">
           <Menu.Item key="dashboard" icon={<DashboardOutlined />}>
@@ -23,11 +23,11 @@ export default function AdminLayout({ children }) {
           <Menu.Item key="roles" icon={<DashboardOutlined />}>
             <Link to="/admin/roles">Roles</Link>
           </Menu.Item>
-          <Menu.Item key="companies" icon={<DashboardOutlined />}>
-            <Link to="/admin/companies">Companies</Link>
-          </Menu.Item>
           <Menu.Item key="department" icon={<DashboardOutlined />}>
             <Link to="/admin/departments">Departments</Link>
+          </Menu.Item>
+          <Menu.Item key="users" icon={<DashboardOutlined />}>
+            <Link to="/admin/users">Users</Link>
           </Menu.Item>
 
         </Menu>

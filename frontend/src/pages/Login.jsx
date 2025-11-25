@@ -5,20 +5,17 @@ import { useNavigate, Link } from "react-router-dom";
 import { handleError } from "../utils/handleError";
 import { parseJwt } from "../utils/jwt";
 
-import { Form, Input, Button, Typography, Alert } from "antd";
+import { Form, Input, Button, Typography, message } from "antd";
 
 const { Title } = Typography;
 
 export default function Login() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (values) => {
     setLoading(true);
-    setError("");
-
     try {
       const res = await loginUser(values);
       const token = res.data.data.token;
@@ -29,15 +26,20 @@ export default function Login() {
 
       login(token, user);
 
-      if (payload.role?.toLowerCase() === "admin") {
+      if (payload.role?.toLowerCase() === "ceo") {
         navigate("/admin");
-      } else if (payload.role?.toLowerCase() === "superadmin") {
+        message.success("Login successful! Welcome to the Admin Dashboard.");
+      } else if (payload.role?.toLowerCase() === "superAdmin") {
         navigate("/super-admin");
+        message.success(
+          "Login successful! Welcome to the Super Admin Dashboard."
+        );
       } else {
         navigate("/");
+        message.success("Login successful! Welcome.");
       }
     } catch (err) {
-      handleError(err, setError);
+      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -46,12 +48,9 @@ export default function Login() {
   return (
     <div className="auth-page">
       <div className="auth-box">
-
         <Title level={2} style={{ textAlign: "center" }}>
           Login
         </Title>
-
-        {error && <Alert type="error" message={error} style={{ marginBottom: 10 }} />}
 
         <Form layout="vertical" onFinish={handleSubmit}>
           <Form.Item
@@ -80,6 +79,24 @@ export default function Login() {
             Login
           </Button>
         </Form>
+
+        <p
+          style={{
+            marginTop: "12px",
+            textAlign: "center",
+          }}
+        >
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            style={{
+              color: "#007bff",
+              fontWeight: "bold",
+            }}
+          >
+            Register
+          </Link>
+        </p>
       </div>
     </div>
   );

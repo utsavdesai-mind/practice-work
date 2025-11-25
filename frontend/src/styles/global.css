@@ -22,7 +22,7 @@ body {
 
 /* Auth Box */
 .auth-box {
-  width: 380px;
+  min-width: 380px;
   background: #fff;
   border-radius: 10px;
   padding: 32px;

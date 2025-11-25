@@ -6,8 +6,9 @@ import SuperAdminLayout from "./layouts/SuperAdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import RolePage from "./pages/admin/RolePage";
-import CompanyPage from "./pages/admin/CompanyPage";
 import DepartmentPage from "./pages/admin/DepartmentPage";
+import Register from "./pages/Register";
+import UserPage from "./pages/admin/UserPage";
 
 function App() {
   return (
@@ -19,7 +20,7 @@ function App() {
         <Route
           path="/admin"
           element={
-            <RoleRoute allowed={["admin"]}>
+            <RoleRoute allowed={["CEO"]}>
               <AdminLayout>
                 <AdminDashboard />
               </AdminLayout>
@@ -43,21 +44,9 @@ function App() {
         <Route
           path="/admin/roles"
           element={
-            <RoleRoute allowed={['admin', 'superAdmin']}>
+            <RoleRoute allowed={["CEO"]}>
               <AdminLayout>
                 <RolePage />
-              </AdminLayout>
-            </RoleRoute>
-          }
-        />
-
-        {/* Company - Accessible by both Admin and SuperAdmin */}
-        <Route
-          path="/admin/companies"
-          element={
-            <RoleRoute allowed={['admin', 'superAdmin']}>
-              <AdminLayout>
-                <CompanyPage />
               </AdminLayout>
             </RoleRoute>
           }
@@ -67,13 +56,28 @@ function App() {
         <Route
           path="/admin/departments"
           element={
-            <RoleRoute allowed={['admin', 'superAdmin']}>
+            <RoleRoute allowed={["CEO"]}>
               <AdminLayout>
                 <DepartmentPage />
               </AdminLayout>
             </RoleRoute>
           }
         />
+
+        {/* Users - Accessible by both Admin and SuperAdmin */}
+        <Route
+          path="/admin/users"
+          element={
+            <RoleRoute allowed={["CEO"]}>
+              <AdminLayout>
+                <UserPage />
+              </AdminLayout>
+            </RoleRoute>
+          }
+        />
+
+        {/* Register */}
+        <Route path="/register" element={<Register />} />
 
         {/* Default */}
         <Route path="*" element={<Login />} />

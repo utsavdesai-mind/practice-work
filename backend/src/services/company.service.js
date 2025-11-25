@@ -3,7 +3,10 @@ const Department = require("../models/department.model");
 const ApiError = require("../utils/ApiError");
 
 exports.createCompany = async (companyData) => {
-  const existing = await Company.findOne({ name: new RegExp(`^${companyData.name}$`, 'i') });
+  const existing = await Company.findOne({
+    name: new RegExp(`^${companyData.name}$`, "i"),
+    createdBy: companyData.createdBy,
+  });
   if (existing) {
     throw new ApiError(400, "Company with this name already exists");
   }
@@ -12,7 +15,9 @@ exports.createCompany = async (companyData) => {
 };
 
 exports.getCompanies = async () => {
-  return await Company.find().populate("createdBy", "name email").sort({ createdAt: -1 });
+  return await Company.find()
+    .populate("createdBy", "name email")
+    .sort({ createdAt: -1 });
 };
 
 exports.getCompanyById = async (companyId) => {

@@ -13,8 +13,8 @@ app.use(cors());
 app.use(express.json());
 
 connectDB().then(async () => {
-  await seedRoles();
-  await seedUsers();
+  // await seedRoles();
+  // await seedUsers();
 });
 
 app.use('/api', appRoutes);

@@ -1,6 +1,6 @@
 import api from "./axiosConfig";
 
-export const getRoles = () => api.get("/roles");
+export const getRoles = (params) => api.get("/roles", { params });
 export const getRoleById = (id) => api.get(`/roles/${id}`);
 export const createRole = (data) => api.post("/roles", data);
 export const updateRole = (id, data) => api.put(`/roles/${id}`, data);

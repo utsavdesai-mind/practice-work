@@ -1,28 +1,30 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Role",
-    required: true
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+    },
+    department: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Department",
+    },
   },
-  company: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Company",
-  },
-  department: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Department",
-  },
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 // Hash password before saving
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
@@ -34,5 +36,4 @@ userSchema.methods.toJSON = function () {
   return user;
 };
 
-
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("User", userSchema);

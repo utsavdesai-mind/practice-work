@@ -13,7 +13,8 @@ exports.createUser = async (req, res, next) => {
 
 exports.getUsers = async (req, res, next) => {
   try {
-    const users = await userService.getUsers();
+    const { company, department, role } = req.query;
+    const users = await userService.getUsers(company, department, role);
     return successResponse(res, "Users fetched successfully", users, 200);
   } catch (err) {
     next(err);

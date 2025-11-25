@@ -1,18 +1,22 @@
-export const handleError = (error, setErrorMessage) => {
-  if (!error?.response) {
-    setErrorMessage("Network Error. Please check your connection.");
+import { message } from "antd";
+
+export const handleError = (error) => {
+  if (!error.response) {
+    message.error("Network Error. Please check your connection.");
     return;
   }
 
   const { status, data } = error.response;
 
   if (status === 400 || status === 401) {
-    setErrorMessage(data?.message || "Invalid Credentials");
+    const errorMsg = data?.message || "An error occurred.";
+    message.error(errorMsg);
   } else if (status === 404) {
-    setErrorMessage("Resource not found!");
+    const errorMsg = data?.message || "Requested resource not found.";
+    message.error(errorMsg);
   } else if (status === 500) {
-    setErrorMessage("Server Error. Try again later.");
+    message.error("Server Error. Please try again later.");
   } else {
-    setErrorMessage("Something went wrong.");
+    message.error("An unexpected error occurred.");
   }
 };
