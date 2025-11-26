@@ -5,7 +5,12 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String },
+    invitationOTP: { type: String },
+    invitationToken: { type: String },
+    invitationTokenExpiry: { type: Date },
+    isAccepted: { type: Boolean, default: false },
+    is_first_login: { type: Boolean, default: true },
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",

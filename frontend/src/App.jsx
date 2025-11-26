@@ -9,6 +9,7 @@ import RolePage from "./pages/admin/RolePage";
 import DepartmentPage from "./pages/admin/DepartmentPage";
 import Register from "./pages/Register";
 import UserPage from "./pages/admin/UserPage";
+import AcceptInvitation from "./pages/AcceptInvitation";
 
 function App() {
   return (
@@ -18,13 +19,11 @@ function App() {
 
         {/* Admin */}
         <Route
-          path="/admin"
+          path="/"
           element={
-            <RoleRoute allowed={["CEO"]}>
-              <AdminLayout>
-                <AdminDashboard />
-              </AdminLayout>
-            </RoleRoute>
+            <AdminLayout>
+              <AdminDashboard />
+            </AdminLayout>
           }
         />
 
@@ -40,44 +39,41 @@ function App() {
           }
         />
 
-        {/* Roles - Accessible by both Admin and SuperAdmin */}
+        {/* Roles */}
         <Route
-          path="/admin/roles"
+          path="/roles"
           element={
-            <RoleRoute allowed={["CEO"]}>
-              <AdminLayout>
-                <RolePage />
-              </AdminLayout>
-            </RoleRoute>
+            <AdminLayout>
+              <RolePage />
+            </AdminLayout>
           }
         />
 
-        {/* Department - Accessible by both Admin and SuperAdmin */}
+        {/* Department */}
         <Route
-          path="/admin/departments"
+          path="/departments"
           element={
-            <RoleRoute allowed={["CEO"]}>
-              <AdminLayout>
-                <DepartmentPage />
-              </AdminLayout>
-            </RoleRoute>
+            <AdminLayout>
+              <DepartmentPage />
+            </AdminLayout>
           }
         />
 
-        {/* Users - Accessible by both Admin and SuperAdmin */}
+        {/* Users */}
         <Route
-          path="/admin/users"
+          path="/users"
           element={
-            <RoleRoute allowed={["CEO"]}>
-              <AdminLayout>
-                <UserPage />
-              </AdminLayout>
-            </RoleRoute>
+            <AdminLayout>
+              <UserPage />
+            </AdminLayout>
           }
         />
 
         {/* Register */}
         <Route path="/register" element={<Register />} />
+
+        {/* Accept Invitation */}
+        <Route path="/accept-invitation" element={<AcceptInvitation />} />
 
         {/* Default */}
         <Route path="*" element={<Login />} />

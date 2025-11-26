@@ -25,19 +25,8 @@ export default function Login() {
       user.roleName = payload.role;
 
       login(token, user);
-
-      if (payload.role?.toLowerCase() === "ceo") {
-        navigate("/admin");
-        message.success("Login successful! Welcome to the Admin Dashboard.");
-      } else if (payload.role?.toLowerCase() === "superAdmin") {
-        navigate("/super-admin");
-        message.success(
-          "Login successful! Welcome to the Super Admin Dashboard."
-        );
-      } else {
-        navigate("/");
-        message.success("Login successful! Welcome.");
-      }
+      navigate("/");
+      message.success("Login successful! Welcome to the Dashboard.");
     } catch (err) {
       handleError(err);
     } finally {

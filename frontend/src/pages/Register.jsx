@@ -52,7 +52,16 @@ export default function Register() {
           <Form.Item
             label="Password"
             name="password"
-            rules={[{ required: true, message: "Enter your password" }]}
+            rules={[
+              {
+                required: true,
+                message: "Enter your password",
+              },
+              {
+                min: 6,
+                message: "Password must be at least 6 characters long.",
+              },
+            ]}
           >
             <Input.Password placeholder="Your Password" />
           </Form.Item>

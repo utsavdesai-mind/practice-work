@@ -18,18 +18,17 @@ export default function AdminLayout({ children }) {
         </div>
         <Menu theme="dark">
           <Menu.Item key="dashboard" icon={<DashboardOutlined />}>
-            <Link to="/admin">Dashboard</Link>
+            <Link to="/">Dashboard</Link>
           </Menu.Item>
           <Menu.Item key="roles" icon={<DashboardOutlined />}>
-            <Link to="/admin/roles">Roles</Link>
+            <Link to="/roles">Roles</Link>
           </Menu.Item>
           <Menu.Item key="department" icon={<DashboardOutlined />}>
-            <Link to="/admin/departments">Departments</Link>
+            <Link to="/departments">Departments</Link>
           </Menu.Item>
           <Menu.Item key="users" icon={<DashboardOutlined />}>
-            <Link to="/admin/users">Users</Link>
+            <Link to="/users">Users</Link>
           </Menu.Item>
-
         </Menu>
       </Sider>
 

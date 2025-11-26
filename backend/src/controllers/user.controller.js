@@ -53,3 +53,30 @@ exports.deleteUser = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.inviteUser = async (req, res, next) => {
+  try {
+    const invitation = await userService.inviteUser(req.params.id);
+    return successResponse(res, "Invitation sent successfully", invitation, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.acceptInvitation = async (req, res, next) => {
+  try {
+    const user = await userService.acceptInvitation(req.body.otp, req.body.token);
+    return successResponse(res, "Invitation accepted successfully", user, 200);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.createPassword = async (req, res, next) => {
+  try {
+    const user = await userService.createPassword(req.body.email, req.body.password);
+    return successResponse(res, "Create password successfully", user, 200);
+  } catch (err) {
+    next(err);
+  }
+};

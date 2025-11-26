@@ -16,9 +16,10 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  inviteUser,
 } from "../../api/userService";
-import { getRoles } from "../../api/roleService";
-import { getDepartments } from "../../api/departmentService";
+import { getRoles, createRole } from "../../api/roleService";
+import { getDepartments, createDepartment } from "../../api/departmentService";
 import { AuthContext } from "../../context/AuthContext";
 import { useContext } from "react";
 import { handleError } from "../../utils/handleError";
@@ -32,6 +33,15 @@ export default function UserPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [form] = Form.useForm();
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [selectedRole, setSelectedRole] = useState(null);
+
+  const [showAddRole, setShowAddRole] = useState(false);
+  const [showAddDepartment, setShowAddDepartment] = useState(false);
+  const [newRoleName, setNewRoleName] = useState("");
+  const [newDepartmentName, setNewDepartmentName] = useState("");
+  const [creatingRole, setCreatingRole] = useState(false);
+  const [creatingDepartment, setCreatingDepartment] = useState(false);
 
   const fetchRoles = async () => {
     try {
@@ -69,11 +79,74 @@ export default function UserPage() {
     }
   };
 
+  const applyFilters = async (department, role) => {
+    try {
+      setLoading(true);
+      const filterParams = { company: user.company._id };
+      
+      if (department) filterParams.department = department;
+      if (role) filterParams.role = role;
+      
+      const res = await getUsers(filterParams);
+      setUsers(res.data.data);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchRoles();
     fetchDepartments();
   }, []);
+
+  const handleCreateRole = async () => {
+    if (!newRoleName.trim()) {
+      message.error("Please enter a role name");
+      return;
+    }
+
+    try {
+      setCreatingRole(true);
+      await createRole({
+        name: newRoleName,
+        company: user.company._id,
+      });
+      message.success("Role created successfully");
+      setNewRoleName("");
+      setShowAddRole(false);
+      await fetchRoles();
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setCreatingRole(false);
+    }
+  };
+
+  const handleCreateDepartment = async () => {
+    if (!newDepartmentName.trim()) {
+      message.error("Please enter a department name");
+      return;
+    }
+
+    try {
+      setCreatingDepartment(true);
+      await createDepartment({
+        name: newDepartmentName,
+        company: user.company._id,
+      });
+      message.success("Department created successfully");
+      setNewDepartmentName("");
+      setShowAddDepartment(false);
+      await fetchDepartments();
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setCreatingDepartment(false);
+    }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -149,6 +222,31 @@ export default function UserPage() {
         </Space>
       ),
     },
+    {
+      title: "Invite User",
+      render: (_, record) => (
+        <Button
+          type="primary"
+          onClick={async () => {
+            try {
+              setLoading(true);
+              const res = await inviteUser(record._id);
+              const invitationLink = res.data.data.invitationLink;
+              const invitationOTP = res.data.data.otp;
+              window.open(invitationLink, "_blank");
+              navigator.clipboard.writeText(invitationOTP);
+              message.success("Invitation sent successfully");
+            } catch (error) {
+              handleError(error);
+            } finally {
+              setLoading(false);
+            }
+          }}
+        >
+          Send Invitation
+        </Button>
+      ),
+    },
   ];
 
   return (
@@ -171,20 +269,9 @@ export default function UserPage() {
             style={{ width: 200, marginRight: 10 }}
             placeholder="Filter by Department"
             allowClear
-            onChange={async (value) => {
-              try {
-                setLoading(true);
-                const res = await getUsers({
-                  company: user.company._id,
-                  department: value,
-                });
-                setUsers(res.data.data);
-              } catch (error) {
-                handleError(error);
-              } finally {
-                setLoading(false);
-              }
-            }}
+            onChange={(value) => {
+              setSelectedDepartment(value);
+              applyFilters(value, selectedRole);            }}
           >
             {departments.map((dept) => (
               <Select.Option key={dept._id} value={dept._id}>
@@ -196,19 +283,9 @@ export default function UserPage() {
             style={{ width: 200, marginRight: 10 }}
             placeholder="Filter by Role"
             allowClear
-            onChange={async (value) => {
-              try {
-                setLoading(true);
-                const res = await getUsers({
-                  company: user.company._id,
-                  role: value,
-                });
-                setUsers(res.data.data);
-              } catch (error) {
-                handleError(error);
-              } finally {
-                setLoading(false);
-              }
+            onChange={(value) => {
+              setSelectedRole(value);
+              applyFilters(selectedDepartment, value);
             }}
           >
             {roles.map((role) => (
@@ -253,7 +330,7 @@ export default function UserPage() {
             name="name"
             rules={[{ required: true, message: "Please input the name!" }]}
           >
-            <Input />
+            <Input placeholder="Enter your name"/>
           </Form.Item>
           {!editData && (
             <>
@@ -262,19 +339,7 @@ export default function UserPage() {
                 name="email"
                 rules={[{ required: true, message: "Please input the email!" }]}
               >
-                <Input type="email" />
-              </Form.Item>
-              <Form.Item
-                label="Password"
-                name="password"
-                rules={[
-                  {
-                    required: !editData,
-                    message: "Please input the password!",
-                  },
-                ]}
-              >
-                <Input.Password />
+                <Input type="email" placeholder="Enter your email"/>
               </Form.Item>
             </>
           )}
@@ -289,8 +354,73 @@ export default function UserPage() {
                   {role.name}
                 </Select.Option>
               ))}
+              <Select.Option disabled>
+                <div
+                  style={{
+                    padding: "8px 0",
+                    borderTop: "1px solid #f0f0f0",
+                    paddingTop: 8,
+                  }}
+                >
+                  <Button
+                    type="text"
+                    block
+                    size="small"
+                    onClick={() => setShowAddRole(true)}
+                  >
+                    + Add Role
+                  </Button>
+                </div>
+              </Select.Option>
             </Select>
           </Form.Item>
+          {showAddRole && (
+            <div
+              style={{
+                padding: "12px",
+                border: "1px solid #d9d9d9",
+                borderRadius: "4px",
+                marginBottom: "12px",
+                backgroundColor: "#fafafa",
+              }}
+            >
+              <div style={{ marginBottom: 8 }}>
+                <label style={{ display: "block", marginBottom: 4 }}>
+                  New Role Name
+                </label>
+                <Input
+                  placeholder="Enter role name"
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  size="small"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handleCreateRole();
+                    }
+                  }}
+                />
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Button
+                  type="primary"
+                  size="small"
+                  loading={creatingRole}
+                  onClick={handleCreateRole}
+                >
+                  Create Role
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setShowAddRole(false);
+                    setNewRoleName("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
           <Form.Item
             label="Department"
             name="department"
@@ -302,8 +432,72 @@ export default function UserPage() {
                   {dept.name}
                 </Select.Option>
               ))}
+              <Select.Option disabled>
+                <div
+                  style={{
+                    padding: "8px 0",
+                    borderTop: "1px solid #f0f0f0",
+                    paddingTop: 8,
+                  }}
+                >
+                  <Button
+                    type="text"
+                    block
+                    size="small"
+                    onClick={() => setShowAddDepartment(true)}
+                  >
+                    + Add Department
+                  </Button>
+                </div>
+              </Select.Option>
             </Select>
           </Form.Item>
+          {showAddDepartment && (
+            <div
+              style={{
+                padding: "12px",
+                border: "1px solid #d9d9d9",
+                borderRadius: "4px",
+                backgroundColor: "#fafafa",
+              }}
+            >
+              <div style={{ marginBottom: 8 }}>
+                <label style={{ display: "block", marginBottom: 4 }}>
+                  New Department Name
+                </label>
+                <Input
+                  placeholder="Enter department name"
+                  value={newDepartmentName}
+                  onChange={(e) => setNewDepartmentName(e.target.value)}
+                  size="small"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handleCreateDepartment();
+                    }
+                  }}
+                />
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Button
+                  type="primary"
+                  size="small"
+                  loading={creatingDepartment}
+                  onClick={handleCreateDepartment}
+                >
+                  Create Department
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setShowAddDepartment(false);
+                    setNewDepartmentName("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </Form>
       </Modal>
     </>
