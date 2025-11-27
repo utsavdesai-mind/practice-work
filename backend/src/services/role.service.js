@@ -1,5 +1,6 @@
 const Role = require("../models/role.model");
 const Company = require("../models/company.model");
+const Permission = require("../models/permission.model");
 const ApiError = require("../utils/ApiError");
 
 exports.createRole = async (roleData) => {
@@ -38,6 +39,14 @@ exports.getRoles = async (companyId) => {
   if (filter.isSystemRole === undefined) {
     filter.isSystemRole = false;
   }
+
+  const ceoRoles = await Role.find({
+    name: { $in: ["CEO"] },
+    company: companyId,
+  }).distinct("_id");
+
+  filter._id = { $nin: ceoRoles };
+
   return await Role.find(filter).sort({ createdAt: -1 });
 };
 
@@ -69,4 +78,24 @@ exports.updateRole = async (roleId, updateData) => {
 
 exports.deleteRole = async (roleId) => {
   return await Role.findByIdAndDelete(roleId);
+};
+
+exports.assignPermissions = async (roleId, rolePermissions) => {
+  if (!Array.isArray(rolePermissions) || rolePermissions.length === 0) {
+    throw new ApiError(400, "Permission list cannot be empty");
+  }
+
+  const existingPermissionsCount = await Permission.countDocuments({ 
+    _id: { $in: rolePermissions } 
+  });
+
+  if (existingPermissionsCount !== rolePermissions.length) {
+    throw new ApiError(400, "One or more entered permissions are invalid.");
+  }
+
+  return await Role.findByIdAndUpdate(
+    roleId,
+    { $set: { permissions: rolePermissions } },
+    { new: true, runValidators: true } 
+  );
 };

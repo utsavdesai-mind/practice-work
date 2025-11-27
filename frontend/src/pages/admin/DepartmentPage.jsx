@@ -32,6 +32,8 @@ export default function DepartmentPage() {
     try {
       const res = await getDepartments({ company: companyId });
       setDepartments(res.data.data);
+    } catch (error) {
+      handleError(error);
     } finally {
       setLoading(false);
     }
@@ -106,19 +108,23 @@ export default function DepartmentPage() {
       title: "Actions",
       render: (_, record) => (
         <Space>
-          <Button type="link" onClick={() => openModal(record)}>
-            Edit
-          </Button>
-          <Popconfirm
-            title="Are you sure delete this department?"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button danger type="link">
-              Delete
+          {user?.role?.permissions.includes("update.dept") && (
+            <Button type="link" onClick={() => openModal(record)}>
+              Edit
             </Button>
-          </Popconfirm>
+          )}
+          {user?.role?.permissions.includes("delete.dept") && (
+            <Popconfirm
+              title="Are you sure delete this department?"
+              onConfirm={() => handleDelete(record._id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button danger type="link">
+                Delete
+              </Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -136,9 +142,11 @@ export default function DepartmentPage() {
         }}
       >
         <h2>Department Management</h2>
-        <Button type="primary" onClick={() => openModal()}>
-          Add Department
-        </Button>
+        {user?.role?.permissions.includes("create.dept") && (
+          <Button type="primary" onClick={() => openModal()}>
+            Add Department
+          </Button>
+        )}
       </div>
 
       {/* Table */}

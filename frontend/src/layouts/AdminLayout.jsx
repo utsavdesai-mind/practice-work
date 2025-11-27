@@ -20,20 +20,34 @@ export default function AdminLayout({ children }) {
           <Menu.Item key="dashboard" icon={<DashboardOutlined />}>
             <Link to="/">Dashboard</Link>
           </Menu.Item>
-          <Menu.Item key="roles" icon={<DashboardOutlined />}>
-            <Link to="/roles">Roles</Link>
-          </Menu.Item>
-          <Menu.Item key="department" icon={<DashboardOutlined />}>
-            <Link to="/departments">Departments</Link>
-          </Menu.Item>
-          <Menu.Item key="users" icon={<DashboardOutlined />}>
-            <Link to="/users">Users</Link>
-          </Menu.Item>
+          {user?.role?.permissions.includes("get.role") && (
+            <Menu.Item key="roles" icon={<DashboardOutlined />}>
+              <Link to="/roles">Roles</Link>
+            </Menu.Item>
+          )}
+          {user?.role?.permissions.includes("get.dept") && (
+            <Menu.Item key="department" icon={<DashboardOutlined />}>
+              <Link to="/departments">Departments</Link>
+            </Menu.Item>
+          )}
+          {user?.role?.permissions.includes("get.user") && (
+            <Menu.Item key="users" icon={<DashboardOutlined />}>
+              <Link to="/users">Users</Link>
+            </Menu.Item>
+          )}
         </Menu>
       </Sider>
 
       <Layout>
-        <Header style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "0 20px", background: "#fff" }}>
+        <Header
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            padding: "0 20px",
+            background: "#fff",
+          }}
+        >
           <Button
             icon={<LogoutOutlined />}
             onClick={() => {

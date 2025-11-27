@@ -1,15 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../../middlewares/auth');
-const authorizeRole = require('../../middlewares/role');
+const authorizePermissions = require('../../middlewares/permission');
 const validate = require('../../middlewares/validate');
 const roleController = require('../../controllers/role.controller');
 const { roleSchema } = require('../../validations/role.validation');
 
-router.post('/', auth, authorizeRole('ceo'), validate(roleSchema), roleController.createRole);
-router.get('/', auth, authorizeRole('ceo'), roleController.getAllRoles);
-router.get('/:id', auth, authorizeRole('ceo'), roleController.getRoleById);
-router.put('/:id', auth, authorizeRole('ceo'), validate(roleSchema), roleController.updateRole);
-router.delete('/:id', auth, authorizeRole('ceo'), roleController.deleteRole);
+router.post('/', auth, authorizePermissions('create.role'), validate(roleSchema), roleController.createRole);
+router.get('/', auth, authorizePermissions('get.role'), roleController.getAllRoles);
+router.get('/:id', auth, authorizePermissions('get.role'), roleController.getRoleById);
+router.put('/:id', auth, authorizePermissions('update.role'), validate(roleSchema), roleController.updateRole);
+router.delete('/:id', auth, authorizePermissions('delete.role'), roleController.deleteRole);
+
+router.post('/assign-permission/:id', auth, authorizePermissions('assign.role'), roleController.assignPermissions)
 
 module.exports = router;

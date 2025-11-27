@@ -83,10 +83,10 @@ export default function UserPage() {
     try {
       setLoading(true);
       const filterParams = { company: user.company._id };
-      
+
       if (department) filterParams.department = department;
       if (role) filterParams.role = role;
-      
+
       const res = await getUsers(filterParams);
       setUsers(res.data.data);
     } catch (error) {
@@ -206,45 +206,53 @@ export default function UserPage() {
       title: "Actions",
       render: (_, record) => (
         <Space>
-          <Button type="link" onClick={() => openEditModal(record)}>
-            Edit
-          </Button>
-          <Popconfirm
-            title="Are you sure to delete this user?"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button type="link" danger>
-              Delete
+          {user?.role?.permissions.includes("update.user") && (
+            <Button type="link" onClick={() => openEditModal(record)}>
+              Edit
             </Button>
-          </Popconfirm>
+          )}
+          {user?.role?.permissions.includes("delete.user") && (
+            <Popconfirm
+              title="Are you sure to delete this user?"
+              onConfirm={() => handleDelete(record._id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type="link" danger>
+                Delete
+              </Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
     {
       title: "Invite User",
       render: (_, record) => (
-        <Button
-          type="primary"
-          onClick={async () => {
-            try {
-              setLoading(true);
-              const res = await inviteUser(record._id);
-              const invitationLink = res.data.data.invitationLink;
-              const invitationOTP = res.data.data.otp;
-              window.open(invitationLink, "_blank");
-              navigator.clipboard.writeText(invitationOTP);
-              message.success("Invitation sent successfully");
-            } catch (error) {
-              handleError(error);
-            } finally {
-              setLoading(false);
-            }
-          }}
-        >
-          Send Invitation
-        </Button>
+        <>
+          {user?.role?.permissions.includes("invite.user") && (
+            <Button
+              type="primary"
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  const res = await inviteUser(record._id);
+                  const invitationLink = res.data.data.invitationLink;
+                  const invitationOTP = res.data.data.otp;
+                  window.open(invitationLink, "_blank");
+                  navigator.clipboard.writeText(invitationOTP);
+                  message.success("Invitation sent successfully");
+                } catch (error) {
+                  handleError(error);
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              Send Invitation
+            </Button>
+          )}
+        </>
       ),
     },
   ];
@@ -271,7 +279,8 @@ export default function UserPage() {
             allowClear
             onChange={(value) => {
               setSelectedDepartment(value);
-              applyFilters(value, selectedRole);            }}
+              applyFilters(value, selectedRole);
+            }}
           >
             {departments.map((dept) => (
               <Select.Option key={dept._id} value={dept._id}>
@@ -294,16 +303,18 @@ export default function UserPage() {
               </Select.Option>
             ))}
           </Select>
-          <Button
-            type="primary"
-            onClick={() => {
-              setEditData(null);
-              form.resetFields();
-              setModalOpen(true);
-            }}
-          >
-            Add User
-          </Button>
+          {user?.role?.permissions.includes("create.user") && (
+            <Button
+              type="primary"
+              onClick={() => {
+                setEditData(null);
+                form.resetFields();
+                setModalOpen(true);
+              }}
+            >
+              Add User
+            </Button>
+          )}
         </div>
       </div>
 
@@ -330,7 +341,7 @@ export default function UserPage() {
             name="name"
             rules={[{ required: true, message: "Please input the name!" }]}
           >
-            <Input placeholder="Enter your name"/>
+            <Input placeholder="Enter your name" />
           </Form.Item>
           {!editData && (
             <>
@@ -339,7 +350,7 @@ export default function UserPage() {
                 name="email"
                 rules={[{ required: true, message: "Please input the email!" }]}
               >
-                <Input type="email" placeholder="Enter your email"/>
+                <Input type="email" placeholder="Enter your email" />
               </Form.Item>
             </>
           )}

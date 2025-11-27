@@ -59,3 +59,15 @@ exports.deleteRole = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.assignPermissions = async (req, res, next) => {
+  try {
+    const role = await roleService.assignPermissions(req.params.id, req.body.permissions);
+    if (!role) {
+      return next(new ApiError(404, `Role with ID ${req.params.id} not found.`));
+    }
+    return successResponse(res, "Permissions assign successfully", null, 200);
+  } catch (err) {
+    next(err);
+  }
+};

@@ -80,7 +80,7 @@ exports.getUsers = async (companyId, departmentId, roleId) => {
   }
 
   return User.find(filter)
-    .populate("role", "name")
+    .populate("role", "name permissions")
     .populate("company", "name")
     .populate("department", "name")
     .sort({ createdAt: -1 });

@@ -1,21 +1,50 @@
 import { useContext, useEffect, useState } from "react";
-import { Table, Button, Modal, Form, Input, Popconfirm, message } from "antd";
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Popconfirm,
+  message,
+  Select,
+} from "antd";
 import {
   getRoles,
   createRole,
   updateRole,
   deleteRole,
+  assignPermissions,
 } from "../../api/roleService";
+import { getPermissions } from "../../api/permissionService";
 import { handleError } from "../../utils/handleError";
 import { AuthContext } from "../../context/AuthContext";
+
+const { Option } = Select;
 
 export default function RolePage() {
   const { user } = useContext(AuthContext);
   const [roles, setRoles] = useState([]);
+  const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editRole, setEditRole] = useState(null);
+  const [selectedPermissionsByRole, setSelectedPermissionsByRole] = useState(
+    {}
+  );
   const [form] = Form.useForm();
+
+  const fetchPermissions = async () => {
+    try {
+      setLoading(true);
+      const res = await getPermissions();
+      setPermissions(res.data.data || []);
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchRoles = async () => {
     try {
@@ -31,6 +60,7 @@ export default function RolePage() {
 
   useEffect(() => {
     fetchRoles();
+    fetchPermissions();
   }, []);
 
   const handleSubmit = async () => {
@@ -84,23 +114,81 @@ export default function RolePage() {
       render: (text) => new Date(text).toLocaleDateString(),
     },
     {
+      title: "Assign Permission",
+      width: 500,
+      render: (_, record) => (
+        <div style={{ display: "flex", gap: 8 }}>
+          {user?.role?.permissions.includes("assign.role") && (
+            <>
+              <Select
+                mode="multiple"
+                placeholder="Select permissions"
+                value={
+                  selectedPermissionsByRole[record._id] ||
+                  (record.permissions
+                    ? record.permissions.map((p) => (p._id ? p._id : p))
+                    : [])
+                }
+                onChange={(vals) =>
+                  setSelectedPermissionsByRole((prev) => ({
+                    ...prev,
+                    [record._id]: vals,
+                  }))
+                }
+                style={{ flex: 1 }}
+              >
+                {permissions.map((option) => (
+                  <Option key={option._id} value={option._id}>
+                    {option.label}
+                  </Option>
+                ))}
+              </Select>
+              <Button
+                type="primary"
+                onClick={async () => {
+                  try {
+                    const perms =
+                      selectedPermissionsByRole[record._id] ||
+                      (record.permissions
+                        ? record.permissions.map((p) => (p._id ? p._id : p))
+                        : []);
+                    await assignPermissions(record._id, { permissions: perms });
+                    message.success("Permissions assigned");
+                    fetchRoles();
+                  } catch (err) {
+                    handleError(err);
+                  }
+                }}
+              >
+                Assign
+              </Button>
+            </>
+          )}
+        </div>
+      ),
+    },
+    {
       title: "Actions",
       render: (_, record) => (
         <>
-          <Button type="link" onClick={() => openEditModal(record)}>
-            Edit
-          </Button>
-
-          <Popconfirm
-            title="Delete this role?"
-            okText="Yes"
-            cancelText="No"
-            onConfirm={() => handleDelete(record._id)}
-          >
-            <Button type="link" danger>
-              Delete
+          {user?.role?.permissions.includes("update.role") && (
+            <Button type="link" onClick={() => openEditModal(record)}>
+              Edit
             </Button>
-          </Popconfirm>
+          )}
+
+          {user?.role?.permissions.includes("delete.role") && (
+            <Popconfirm
+              title="Delete this role?"
+              okText="Yes"
+              cancelText="No"
+              onConfirm={() => handleDelete(record._id)}
+            >
+              <Button type="link" danger>
+                Delete
+              </Button>
+            </Popconfirm>
+          )}
         </>
       ),
     },
@@ -116,16 +204,18 @@ export default function RolePage() {
         }}
       >
         <h2>Roles Management</h2>
-        <Button
-          type="primary"
-          onClick={() => {
-            setEditRole(null);
-            form.resetFields();
-            setModalOpen(true);
-          }}
-        >
-          Add Role
-        </Button>
+        {user?.role?.permissions.includes("create.role") && (
+          <Button
+            type="primary"
+            onClick={() => {
+              setEditRole(null);
+              form.resetFields();
+              setModalOpen(true);
+            }}
+          >
+            Add Role
+          </Button>
+        )}
       </div>
 
       <Table
