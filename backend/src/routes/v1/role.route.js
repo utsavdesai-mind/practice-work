@@ -7,7 +7,7 @@ const roleController = require('../../controllers/role.controller');
 const { roleSchema } = require('../../validations/role.validation');
 
 router.post('/', auth, authorizePermissions('create.role'), validate(roleSchema), roleController.createRole);
-router.get('/', auth, authorizePermissions('get.role'), roleController.getAllRoles);
+router.get('/', auth, roleController.getAllRoles);
 router.get('/:id', auth, authorizePermissions('get.role'), roleController.getRoleById);
 router.put('/:id', auth, authorizePermissions('update.role'), validate(roleSchema), roleController.updateRole);
 router.delete('/:id', auth, authorizePermissions('delete.role'), roleController.deleteRole);

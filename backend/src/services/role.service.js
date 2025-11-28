@@ -47,7 +47,7 @@ exports.getRoles = async (companyId) => {
 
   filter._id = { $nin: ceoRoles };
 
-  return await Role.find(filter).sort({ createdAt: -1 });
+  return await Role.find(filter).populate("permissions", "label").sort({ createdAt: -1 });
 };
 
 exports.getRoleById = async (roleId) => {
@@ -81,11 +81,11 @@ exports.deleteRole = async (roleId) => {
 };
 
 exports.assignPermissions = async (roleId, rolePermissions) => {
-  if (!Array.isArray(rolePermissions) || rolePermissions.length === 0) {
+  if (!Array.isArray(rolePermissions)) {
     throw new ApiError(400, "Permission list cannot be empty");
   }
 
-  const existingPermissionsCount = await Permission.countDocuments({ 
+  const existingPermissionsCount = await Permission.countDocuments({
     _id: { $in: rolePermissions } 
   });
 
@@ -96,6 +96,6 @@ exports.assignPermissions = async (roleId, rolePermissions) => {
   return await Role.findByIdAndUpdate(
     roleId,
     { $set: { permissions: rolePermissions } },
-    { new: true, runValidators: true } 
+    { new: true, runValidators: true }
   );
 };

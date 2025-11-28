@@ -7,7 +7,10 @@ import {
   Input,
   Popconfirm,
   message,
-  Select,
+  Checkbox,
+  Empty,
+  Spin,
+  Tag,
 } from "antd";
 import {
   getRoles,
@@ -20,29 +23,29 @@ import { getPermissions } from "../../api/permissionService";
 import { handleError } from "../../utils/handleError";
 import { AuthContext } from "../../context/AuthContext";
 
-const { Option } = Select;
-
 export default function RolePage() {
   const { user } = useContext(AuthContext);
   const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [permissionModalOpen, setPermissionModalOpen] = useState(false);
   const [editRole, setEditRole] = useState(null);
-  const [selectedPermissionsByRole, setSelectedPermissionsByRole] = useState(
-    {}
-  );
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedPermissions, setSelectedPermissions] = useState([]);
+  const [permissionSearchText, setPermissionSearchText] = useState("");
+  const [loadingPermissions, setLoadingPermissions] = useState(false);
   const [form] = Form.useForm();
 
   const fetchPermissions = async () => {
     try {
-      setLoading(true);
+      setLoadingPermissions(true);
       const res = await getPermissions();
       setPermissions(res.data.data || []);
     } catch (err) {
       handleError(err);
     } finally {
-      setLoading(false);
+      setLoadingPermissions(false);
     }
   };
 
@@ -101,6 +104,55 @@ export default function RolePage() {
     setModalOpen(true);
   };
 
+  // Open permission assignment modal
+  const openPermissionModal = (role) => {
+    setSelectedRole(role);
+    setSelectedPermissions(
+      role.permissions ? role.permissions.map((p) => (p._id ? p._id : p)) : []
+    );
+    setPermissionSearchText("");
+    setPermissionModalOpen(true);
+  };
+
+  // Get permissions grouped by module
+  const getPermissionsByModule = () => {
+    const filtered =
+      permissionSearchText.trim() === ""
+        ? permissions
+        : permissions.filter((p) =>
+            p.label.toLowerCase().includes(permissionSearchText.toLowerCase())
+          );
+
+    const grouped = {};
+    filtered.forEach((perm) => {
+      if (!grouped[perm.module]) {
+        grouped[perm.module] = [];
+      }
+      grouped[perm.module].push(perm);
+    });
+    return grouped;
+  };
+
+  // Handle permission assignment
+  const handlePermissionAssign = async () => {
+    try {
+      setLoadingPermissions(true);
+      await assignPermissions(selectedRole._id, {
+        permissions: selectedPermissions,
+      });
+      message.success("Permissions assigned successfully");
+      setPermissionModalOpen(false);
+      setSelectedRole(null);
+      setSelectedPermissions([]);
+      setPermissionSearchText("");
+      fetchRoles();
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setLoadingPermissions(false);
+    }
+  };
+
   const columns = [
     { title: "Role Name", dataIndex: "name" },
     {
@@ -115,60 +167,42 @@ export default function RolePage() {
     },
     {
       title: "Assign Permission",
+      key: "assignPermission",
       width: 500,
       render: (_, record) => (
-        <div style={{ display: "flex", gap: 8 }}>
-          {user?.role?.permissions.includes("assign.role") && (
-            <>
-              <Select
-                mode="multiple"
-                placeholder="Select permissions"
-                value={
-                  selectedPermissionsByRole[record._id] ||
-                  (record.permissions
-                    ? record.permissions.map((p) => (p._id ? p._id : p))
-                    : [])
-                }
-                onChange={(vals) =>
-                  setSelectedPermissionsByRole((prev) => ({
-                    ...prev,
-                    [record._id]: vals,
-                  }))
-                }
-                style={{ flex: 1 }}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          <div>
+            {record.permissions.map((permission) => (
+              <Tag
+                key={permission._id}
+                color="blue"
+                style={{ margin: "5px 5px 0px 0px" }}
               >
-                {permissions.map((option) => (
-                  <Option key={option._id} value={option._id}>
-                    {option.label}
-                  </Option>
-                ))}
-              </Select>
-              <Button
-                type="primary"
-                onClick={async () => {
-                  try {
-                    const perms =
-                      selectedPermissionsByRole[record._id] ||
-                      (record.permissions
-                        ? record.permissions.map((p) => (p._id ? p._id : p))
-                        : []);
-                    await assignPermissions(record._id, { permissions: perms });
-                    message.success("Permissions assigned");
-                    fetchRoles();
-                  } catch (err) {
-                    handleError(err);
-                  }
-                }}
-              >
-                Assign
-              </Button>
-            </>
-          )}
+                {permission.label}
+              </Tag>
+            ))}
+          </div>
+          <div>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => openPermissionModal(record)}
+            >
+              Manage Permissions
+            </Button>
+          </div>
         </div>
       ),
     },
     {
       title: "Actions",
+      key: "actions",
       render: (_, record) => (
         <>
           {user?.role?.permissions.includes("update.role") && (
@@ -176,7 +210,6 @@ export default function RolePage() {
               Edit
             </Button>
           )}
-
           {user?.role?.permissions.includes("delete.role") && (
             <Popconfirm
               title="Delete this role?"
@@ -193,6 +226,19 @@ export default function RolePage() {
       ),
     },
   ];
+
+  const filteredColumns = columns.filter((column) => {
+    if (column.key === "assignPermission") {
+      return user?.role?.permissions.includes("assign.role");
+    }
+    if (column.key === "actions") {
+      return (
+        user?.role?.permissions.includes("update.role") ||
+        user?.role?.permissions.includes("delete.role")
+      );
+    }
+    return true;
+  });
 
   return (
     <>
@@ -222,7 +268,7 @@ export default function RolePage() {
         rowKey="_id"
         loading={loading}
         dataSource={roles}
-        columns={columns}
+        columns={filteredColumns}
         pagination={false}
       />
 
@@ -241,6 +287,84 @@ export default function RolePage() {
             <Input placeholder="Enter role name" />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Permission Assignment Modal */}
+      <Modal
+        title={`Assign Permissions to ${selectedRole?.name || ""}`}
+        open={permissionModalOpen}
+        onCancel={() => {
+          setPermissionModalOpen(false);
+          setSelectedRole(null);
+          setSelectedPermissions([]);
+          setPermissionSearchText("");
+        }}
+        onOk={handlePermissionAssign}
+        okText="Save Permissions"
+        width={700}
+        bodyStyle={{ maxHeight: "70vh", overflowY: "auto" }}
+        confirmLoading={loadingPermissions}
+      >
+        <Spin spinning={loadingPermissions}>
+          <Input
+            placeholder="Search permissions by name..."
+            value={permissionSearchText}
+            onChange={(e) => setPermissionSearchText(e.target.value)}
+            style={{ marginBottom: 20 }}
+            allowClear
+          />
+          <Checkbox.Group
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+            value={selectedPermissions}
+            onChange={(vals) => setSelectedPermissions(vals)}
+          >
+            {Object.keys(getPermissionsByModule()).length > 0 ? (
+              Object.entries(getPermissionsByModule()).map(
+                ([module, perms], index) => (
+                  <div key={module}>
+                    <h4
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        color: "#1677ff",
+                        marginTop: index === 0 ? 0 : 16,
+                        marginBottom: 12,
+                      }}
+                    >
+                      📦 {module}
+                    </h4>
+                    <div style={{ marginLeft: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                      {perms.map((perm) => (
+                        <Checkbox key={perm._id} value={perm._id}>
+                          <span style={{ fontSize: "13px" }}>
+                            {perm.label}
+                            <span style={{ color: "#999", fontSize: "11px" }}>
+                              {" "}
+                              ({perm.key})
+                            </span>
+                          </span>
+                        </Checkbox>
+                      ))}
+                    </div>
+                  </div>
+                )
+              )
+            ) : (
+              <Empty
+                description={
+                  permissionSearchText
+                    ? "No permissions found"
+                    : "No permissions available"
+                }
+                style={{ marginTop: 20 }}
+              />
+            )}
+          </Checkbox.Group>
+        </Spin>
       </Modal>
     </>
   );

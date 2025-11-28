@@ -1,5 +1,5 @@
 import { Layout, Menu, Button } from "antd";
-import { LogoutOutlined, DashboardOutlined } from "@ant-design/icons";
+import { LogoutOutlined, DashboardOutlined, UsergroupAddOutlined, ContactsOutlined, SwapOutlined } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
@@ -14,24 +14,24 @@ export default function AdminLayout({ children }) {
     <Layout style={{ height: "100vh" }}>
       <Sider>
         <div style={{ color: "white", padding: 20, fontSize: 18 }}>
-          {user.company?.name || "Admin Dashboard"}
+          {user?.company?.name || "Admin Dashboard"}
         </div>
         <Menu theme="dark">
           <Menu.Item key="dashboard" icon={<DashboardOutlined />}>
             <Link to="/">Dashboard</Link>
           </Menu.Item>
           {user?.role?.permissions.includes("get.role") && (
-            <Menu.Item key="roles" icon={<DashboardOutlined />}>
+            <Menu.Item key="roles" icon={<SwapOutlined />}>
               <Link to="/roles">Roles</Link>
             </Menu.Item>
           )}
           {user?.role?.permissions.includes("get.dept") && (
-            <Menu.Item key="department" icon={<DashboardOutlined />}>
+            <Menu.Item key="department" icon={<ContactsOutlined />}>
               <Link to="/departments">Departments</Link>
             </Menu.Item>
           )}
           {user?.role?.permissions.includes("get.user") && (
-            <Menu.Item key="users" icon={<DashboardOutlined />}>
+            <Menu.Item key="users" icon={<UsergroupAddOutlined />}>
               <Link to="/users">Users</Link>
             </Menu.Item>
           )}

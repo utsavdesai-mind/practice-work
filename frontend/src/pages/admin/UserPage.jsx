@@ -204,6 +204,7 @@ export default function UserPage() {
     },
     {
       title: "Actions",
+      key: "actions",
       render: (_, record) => (
         <Space>
           {user?.role?.permissions.includes("update.user") && (
@@ -228,34 +229,44 @@ export default function UserPage() {
     },
     {
       title: "Invite User",
+      key: "inviteUser",
       render: (_, record) => (
-        <>
-          {user?.role?.permissions.includes("invite.user") && (
-            <Button
-              type="primary"
-              onClick={async () => {
-                try {
-                  setLoading(true);
-                  const res = await inviteUser(record._id);
-                  const invitationLink = res.data.data.invitationLink;
-                  const invitationOTP = res.data.data.otp;
-                  window.open(invitationLink, "_blank");
-                  navigator.clipboard.writeText(invitationOTP);
-                  message.success("Invitation sent successfully");
-                } catch (error) {
-                  handleError(error);
-                } finally {
-                  setLoading(false);
-                }
-              }}
-            >
-              Send Invitation
-            </Button>
-          )}
-        </>
+        <Button
+          type="primary"
+          onClick={async () => {
+            try {
+              setLoading(true);
+              const res = await inviteUser(record._id);
+              const invitationLink = res.data.data.invitationLink;
+              const invitationOTP = res.data.data.otp;
+              window.open(invitationLink, "_blank");
+              navigator.clipboard.writeText(invitationOTP);
+              message.success("Invitation sent successfully");
+            } catch (error) {
+              handleError(error);
+            } finally {
+              setLoading(false);
+            }
+          }}
+        >
+          Send Invitation
+        </Button>
       ),
     },
   ];
+
+  const filteredColumns = columns.filter((column) => {
+    if (column.key === "inviteUser") {
+      return user?.role?.permissions.includes("invite.user");
+    }
+    if (column.key === "actions") {
+      return (
+        user?.role?.permissions.includes("update.user") ||
+        user?.role?.permissions.includes("delete.user")
+      );
+    }
+    return true;
+  });
 
   return (
     <>
@@ -322,7 +333,7 @@ export default function UserPage() {
         rowKey="_id"
         loading={loading}
         dataSource={users}
-        columns={columns}
+        columns={filteredColumns}
         pagination={false}
       />
 
@@ -336,8 +347,12 @@ export default function UserPage() {
         onOk={handleSubmit}
       >
         <Form form={form} layout="vertical">
+          <div style={{ marginBottom: "8px" }}>
+            <label>
+              <span style={{ color: "red" }}>*</span> Name
+            </label>
+          </div>
           <Form.Item
-            label="Name"
             name="name"
             rules={[{ required: true, message: "Please input the name!" }]}
           >
@@ -345,8 +360,12 @@ export default function UserPage() {
           </Form.Item>
           {!editData && (
             <>
+              <div style={{ marginBottom: "8px" }}>
+                <label>
+                  <span style={{ color: "red" }}>*</span> Email
+                </label>
+              </div>
               <Form.Item
-                label="Email"
                 name="email"
                 rules={[{ required: true, message: "Please input the email!" }]}
               >
@@ -354,161 +373,194 @@ export default function UserPage() {
               </Form.Item>
             </>
           )}
-          <Form.Item
-            label="Role"
-            name="role"
-            rules={[{ required: true, message: "Please select a role!" }]}
-          >
-            <Select placeholder="Select a role">
-              {roles.map((role) => (
-                <Select.Option key={role._id} value={role._id}>
-                  {role.name}
-                </Select.Option>
-              ))}
-              <Select.Option disabled>
-                <div
-                  style={{
-                    padding: "8px 0",
-                    borderTop: "1px solid #f0f0f0",
-                    paddingTop: 8,
-                  }}
-                >
-                  <Button
-                    type="text"
-                    block
-                    size="small"
-                    onClick={() => setShowAddRole(true)}
-                  >
-                    + Add Role
-                  </Button>
-                </div>
-              </Select.Option>
-            </Select>
-          </Form.Item>
-          {showAddRole && (
+          <div style={{ marginBottom: "24px" }}>
             <div
               style={{
-                padding: "12px",
-                border: "1px solid #d9d9d9",
-                borderRadius: "4px",
-                marginBottom: "12px",
-                backgroundColor: "#fafafa",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "8px",
               }}
             >
-              <div style={{ marginBottom: 8 }}>
-                <label style={{ display: "block", marginBottom: 4 }}>
-                  New Role Name
-                </label>
-                <Input
-                  placeholder="Enter role name"
-                  value={newRoleName}
-                  onChange={(e) => setNewRoleName(e.target.value)}
-                  size="small"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      handleCreateRole();
-                    }
-                  }}
-                />
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
+              <label>
+                <span style={{ color: "red" }}>*</span> Role
+              </label>
+              {user?.role?.permissions.includes("create.role") && (
                 <Button
-                  type="primary"
+                  type="link"
                   size="small"
-                  loading={creatingRole}
-                  onClick={handleCreateRole}
+                  onClick={() => setShowAddRole(!showAddRole)}
+                  style={{ padding: "0" }}
                 >
-                  Create Role
+                  + Add Role
                 </Button>
-                <Button
-                  size="small"
-                  onClick={() => {
-                    setShowAddRole(false);
-                    setNewRoleName("");
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
+              )}
             </div>
-          )}
-          <Form.Item
-            label="Department"
-            name="department"
-            rules={[{ required: true, message: "Please select a department!" }]}
-          >
-            <Select placeholder="Select a department">
-              {departments.map((dept) => (
-                <Select.Option key={dept._id} value={dept._id}>
-                  {dept.name}
-                </Select.Option>
-              ))}
-              <Select.Option disabled>
-                <div
-                  style={{
-                    padding: "8px 0",
-                    borderTop: "1px solid #f0f0f0",
-                    paddingTop: 8,
-                  }}
-                >
-                  <Button
-                    type="text"
-                    block
+            <Form.Item
+              name="role"
+              rules={[{ required: true, message: "Please select a role!" }]}
+              style={{ marginBottom: "8px" }}
+            >
+              <Select
+                placeholder="Search and select a role"
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.children?.toLowerCase() ?? "").includes(
+                    input.toLowerCase()
+                  )
+                }
+                optionLabelProp="children"
+                style={{
+                  maxHeight: "300px",
+                }}
+                listHeight={200}
+              >
+                {roles.map((role) => (
+                  <Select.Option key={role._id} value={role._id}>
+                    {role.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            {showAddRole && (
+              <div
+                style={{
+                  padding: "12px",
+                  border: "1px solid #d9d9d9",
+                  borderRadius: "4px",
+                  backgroundColor: "#fafafa",
+                }}
+              >
+                <div style={{ marginBottom: 8 }}>
+                  <Input
+                    placeholder="Enter role name"
+                    value={newRoleName}
+                    onChange={(e) => setNewRoleName(e.target.value)}
                     size="small"
-                    onClick={() => setShowAddDepartment(true)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleCreateRole();
+                      }
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Button
+                    type="primary"
+                    size="small"
+                    loading={creatingRole}
+                    onClick={handleCreateRole}
                   >
-                    + Add Department
+                    Create
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setShowAddRole(false);
+                      setNewRoleName("");
+                    }}
+                  >
+                    Cancel
                   </Button>
                 </div>
-              </Select.Option>
-            </Select>
-          </Form.Item>
-          {showAddDepartment && (
+              </div>
+            )}
+          </div>
+          <div style={{ marginBottom: "24px" }}>
             <div
               style={{
-                padding: "12px",
-                border: "1px solid #d9d9d9",
-                borderRadius: "4px",
-                backgroundColor: "#fafafa",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "8px",
               }}
             >
-              <div style={{ marginBottom: 8 }}>
-                <label style={{ display: "block", marginBottom: 4 }}>
-                  New Department Name
-                </label>
-                <Input
-                  placeholder="Enter department name"
-                  value={newDepartmentName}
-                  onChange={(e) => setNewDepartmentName(e.target.value)}
-                  size="small"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      handleCreateDepartment();
-                    }
-                  }}
-                />
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
+              <label>
+                <span style={{ color: "red" }}>*</span> Department
+              </label>
+              {user?.role?.permissions.includes("create.dept") && (
                 <Button
-                  type="primary"
+                  type="link"
                   size="small"
-                  loading={creatingDepartment}
-                  onClick={handleCreateDepartment}
+                  onClick={() => setShowAddDepartment(!showAddDepartment)}
+                  style={{ padding: "0" }}
                 >
-                  Create Department
+                  + Add Department
                 </Button>
-                <Button
-                  size="small"
-                  onClick={() => {
-                    setShowAddDepartment(false);
-                    setNewDepartmentName("");
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
+              )}
             </div>
-          )}
+            <Form.Item
+              name="department"
+              rules={[
+                { required: true, message: "Please select a department!" },
+              ]}
+              style={{ marginBottom: "8px" }}
+            >
+              <Select
+                placeholder="Search and select a department"
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.children?.toLowerCase() ?? "").includes(
+                    input.toLowerCase()
+                  )
+                }
+                optionLabelProp="children"
+                style={{
+                  maxHeight: "300px",
+                }}
+                listHeight={200}
+              >
+                {departments.map((dept) => (
+                  <Select.Option key={dept._id} value={dept._id}>
+                    {dept.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            {showAddDepartment && (
+              <div
+                style={{
+                  padding: "12px",
+                  border: "1px solid #d9d9d9",
+                  borderRadius: "4px",
+                  backgroundColor: "#fafafa",
+                }}
+              >
+                <div style={{ marginBottom: 8 }}>
+                  <Input
+                    placeholder="Enter department name"
+                    value={newDepartmentName}
+                    onChange={(e) => setNewDepartmentName(e.target.value)}
+                    size="small"
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleCreateDepartment();
+                      }
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Button
+                    type="primary"
+                    size="small"
+                    loading={creatingDepartment}
+                    onClick={handleCreateDepartment}
+                  >
+                    Create
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setShowAddDepartment(false);
+                      setNewDepartmentName("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </Form>
       </Modal>
     </>

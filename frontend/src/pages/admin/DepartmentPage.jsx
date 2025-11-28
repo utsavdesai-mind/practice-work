@@ -106,6 +106,7 @@ export default function DepartmentPage() {
     },
     {
       title: "Actions",
+      key: "actions",
       render: (_, record) => (
         <Space>
           {user?.role?.permissions.includes("update.dept") && (
@@ -129,6 +130,16 @@ export default function DepartmentPage() {
       ),
     },
   ];
+
+  const filteredColumns = columns.filter((column) => {
+    if (column.key === "actions") {
+      return (
+        user?.role?.permissions.includes("update.dept") ||
+        user?.role?.permissions.includes("delete.dept")
+      );
+    }
+    return true;
+  });
 
   return (
     <div>
@@ -154,7 +165,7 @@ export default function DepartmentPage() {
         loading={loading}
         dataSource={departments}
         rowKey="_id"
-        columns={columns}
+        columns={filteredColumns}
         pagination={false}
       />
 

@@ -10,20 +10,31 @@ import DepartmentPage from "./pages/admin/DepartmentPage";
 import Register from "./pages/Register";
 import UserPage from "./pages/admin/UserPage";
 import AcceptInvitation from "./pages/AcceptInvitation";
+import PrivateRoute from "./routes/PrivateRoute";
+import PublicRoute from "./routes/PublicRoute";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
 
         {/* Admin */}
         <Route
           path="/"
           element={
-            <AdminLayout>
-              <AdminDashboard />
-            </AdminLayout>
+            <PrivateRoute>
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </PrivateRoute>
           }
         />
 
@@ -43,9 +54,11 @@ function App() {
         <Route
           path="/roles"
           element={
-            <AdminLayout>
-              <RolePage />
-            </AdminLayout>
+            <PrivateRoute>
+              <AdminLayout>
+                <RolePage />
+              </AdminLayout>
+            </PrivateRoute>
           }
         />
 
@@ -53,9 +66,11 @@ function App() {
         <Route
           path="/departments"
           element={
-            <AdminLayout>
-              <DepartmentPage />
-            </AdminLayout>
+            <PrivateRoute>
+              <AdminLayout>
+                <DepartmentPage />
+              </AdminLayout>
+            </PrivateRoute>
           }
         />
 
@@ -63,20 +78,43 @@ function App() {
         <Route
           path="/users"
           element={
-            <AdminLayout>
-              <UserPage />
-            </AdminLayout>
+            <PrivateRoute>
+              <AdminLayout>
+                <UserPage />
+              </AdminLayout>
+            </PrivateRoute>
           }
         />
 
         {/* Register */}
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
 
         {/* Accept Invitation */}
-        <Route path="/accept-invitation" element={<AcceptInvitation />} />
+        <Route
+          path="/accept-invitation"
+          element={
+            <PrivateRoute>
+              <AcceptInvitation />
+            </PrivateRoute>
+          }
+        />
 
         {/* Default */}
-        <Route path="*" element={<Login />} />
+        <Route
+          path="*"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

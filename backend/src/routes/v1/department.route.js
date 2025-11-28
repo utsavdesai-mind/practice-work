@@ -9,7 +9,7 @@ const departmentController = require("../../controllers/department.controller");
 const { departmentSchema } = require("../../validations/department.validation");
 
 router.post("/", auth, authorizePermissions('create.dept'), validate(departmentSchema), departmentController.createDepartment);
-router.get("/", auth, authorizePermissions('get.dept'), departmentController.getDepartments);
+router.get("/", auth, departmentController.getDepartments);
 router.get("/:id", auth, authorizePermissions('get.dept'), departmentController.getDepartmentById);
 router.put("/:id", auth, authorizePermissions('update.dept'), validate(departmentSchema), departmentController.updateDepartment);
 router.delete("/:id", auth, authorizePermissions('delete.dept'), departmentController.deleteDepartment);
