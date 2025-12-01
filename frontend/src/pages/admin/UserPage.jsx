@@ -9,6 +9,7 @@ import {
   Popconfirm,
   Form,
   Select,
+  Tag,
 } from "antd";
 
 import {
@@ -230,28 +231,31 @@ export default function UserPage() {
     {
       title: "Invite User",
       key: "inviteUser",
-      render: (_, record) => (
-        <Button
-          type="primary"
-          onClick={async () => {
-            try {
-              setLoading(true);
-              const res = await inviteUser(record._id);
-              const invitationLink = res.data.data.invitationLink;
-              const invitationOTP = res.data.data.otp;
-              window.open(invitationLink, "_blank");
-              navigator.clipboard.writeText(invitationOTP);
-              message.success("Invitation sent successfully");
-            } catch (error) {
-              handleError(error);
-            } finally {
-              setLoading(false);
-            }
-          }}
-        >
-          Send Invitation
-        </Button>
-      ),
+      render: (_, record) =>
+        record.isAccepted === true ? (
+          <Tag style={{ padding: "0 15px" }} color="blue">Already Accepted</Tag>
+        ) : (
+          <Button
+            type="primary"
+            onClick={async () => {
+              try {
+                setLoading(true);
+                const res = await inviteUser(record._id);
+                const invitationLink = res.data.data.invitationLink;
+                const invitationOTP = res.data.data.otp;
+                window.open(invitationLink, "_blank");
+                navigator.clipboard.writeText(invitationOTP);
+                message.success("Invitation sent successfully");
+              } catch (error) {
+                handleError(error);
+              } finally {
+                setLoading(false);
+              }
+            }}
+          >
+            Send Invitation
+          </Button>
+        ),
     },
   ];
 

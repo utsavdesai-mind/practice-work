@@ -17,6 +17,12 @@ const seedPermissions = async () => {
     { label: "Update Department", key: "update.dept", module: "department" },
     { label: "Delete Department", key: "delete.dept", module: "department" },
     { label: "Get Department", key: "get.dept", module: "department" },
+    { label: "Create Credentials", key: "create.credit", module: "credentials" },
+    { label: "Update Credentials", key: "update.credit", module: "credentials" },
+    { label: "Delete Credentials", key: "delete.credit", module: "credentials" },
+    { label: "Get Credentials", key: "get.credit", module: "credentials" },
+    { label: "Export Credentials", key: "export.credit", module: "credentials" },
+    { label: "Share Credentials", key: "share.credit", module: "credentials" },
   ];
 
   for (const permission of defaultPermissions) {

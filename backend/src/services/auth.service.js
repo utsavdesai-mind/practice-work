@@ -37,10 +37,14 @@ exports.register = async (data) => {
       });
       await company.save({ session });
 
+      const allExistingPermissions = await Permission.find();
+      const allPermissionIds = allExistingPermissions.map((p) => p._id);
+
       const role = new Role({
         name: "CEO",
         company: company._id,
         createdBy: user._id,
+        permissions: allPermissionIds,
         isSystemRole: true,
       });
       await role.save({ session });
@@ -63,6 +67,8 @@ exports.register = async (data) => {
     delete resultUser.password;
   }
 
+  
+
   return { user: resultUser, token: resultToken };
 };
 
@@ -74,7 +80,7 @@ exports.login = async ({ email, password }) => {
   if (!match) throw new ApiError(401, "Invalid credentials");
 
   let role = null;
-  if (user.role) role = await Role.findById(user.role).lean(); 
+  if (user.role) role = await Role.findById(user.role).lean();
   if (!role) role = await Role.findOne({ createdBy: user._id }).lean();
   if (!role) throw new ApiError(404, "Role not found for user");
 
@@ -83,10 +89,12 @@ exports.login = async ({ email, password }) => {
   if (!company) company = await Company.findOne({ createdBy: user._id }).lean();
   if (!company) throw new ApiError(404, "Company not found for user");
 
-  const permissionDocs = await Permission.find({ _id: { $in: role.permissions } })
-    .select('key -_id')
+  const permissionDocs = await Permission.find({
+    _id: { $in: role.permissions },
+  })
+    .select("key -_id")
     .lean();
-  const permissionKeys = permissionDocs.map(p => p.key);
+  const permissionKeys = permissionDocs.map((p) => p.key);
   role.permissions = permissionKeys;
 
   const userObj = user.toObject();

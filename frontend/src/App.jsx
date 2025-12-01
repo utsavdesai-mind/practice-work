@@ -7,6 +7,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import RolePage from "./pages/admin/RolePage";
 import DepartmentPage from "./pages/admin/DepartmentPage";
+import CredentialsPage from "./pages/admin/CredentialsPage";
+import SharedCredentials from "./pages/SharedCredentials";
 import Register from "./pages/Register";
 import UserPage from "./pages/admin/UserPage";
 import AcceptInvitation from "./pages/AcceptInvitation";
@@ -82,6 +84,28 @@ function App() {
               <AdminLayout>
                 <UserPage />
               </AdminLayout>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Credentials */}
+        <Route
+          path="/credentials"
+          element={
+            <PrivateRoute>
+              <AdminLayout>
+                <CredentialsPage />
+              </AdminLayout>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Shared credentials access (token in URL) */}
+        <Route
+          path="/shared-credentials/:token"
+          element={
+            <PrivateRoute>
+              <SharedCredentials />
             </PrivateRoute>
           }
         />

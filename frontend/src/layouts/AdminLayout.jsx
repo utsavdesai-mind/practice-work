@@ -1,5 +1,5 @@
 import { Layout, Menu, Button } from "antd";
-import { LogoutOutlined, DashboardOutlined, UsergroupAddOutlined, ContactsOutlined, SwapOutlined } from "@ant-design/icons";
+import { LogoutOutlined, DashboardOutlined, UsergroupAddOutlined, ContactsOutlined, SwapOutlined, KeyOutlined } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
@@ -28,6 +28,11 @@ export default function AdminLayout({ children }) {
           {user?.role?.permissions.includes("get.dept") && (
             <Menu.Item key="department" icon={<ContactsOutlined />}>
               <Link to="/departments">Departments</Link>
+            </Menu.Item>
+          )}
+          {user?.role?.permissions.includes("get.credit") && (
+            <Menu.Item key="credentials" icon={<KeyOutlined />}>
+              <Link to="/credentials">Credentials</Link>
             </Menu.Item>
           )}
           {user?.role?.permissions.includes("get.user") && (
