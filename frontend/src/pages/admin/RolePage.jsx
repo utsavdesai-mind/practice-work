@@ -288,7 +288,7 @@ export default function RolePage() {
           marginBottom: 15,
         }}
       >
-        <h2>Roles Management</h2>
+        <h2 style={{ fontWeight: "bold" }}>Roles Management</h2>
         {user?.role?.permissions.includes("create.role") && (
           <Button
             type="primary"

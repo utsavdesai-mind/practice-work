@@ -1,6 +1,10 @@
 import { Card } from "antd";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 export default function AdminDashboard() {
+  const { user } = useContext(AuthContext);
+
   return (
     <Card style={{
       minHeight: "100%",
@@ -8,7 +12,7 @@ export default function AdminDashboard() {
       justifyContent: "center",
       alignItems: "center"
     }}>
-      <h1>Welcome to the Admin Dashboard</h1>
+      <h1>Welcome to the {user.company.name} Dashboard</h1>
     </Card>
   );
 }

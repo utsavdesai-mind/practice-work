@@ -339,7 +339,7 @@ export default function UserPage() {
           marginBottom: 15,
         }}
       >
-        <h2>User Management</h2>
+        <h2 style={{ fontWeight: "bold" }}>User Management</h2>
         <div
           style={{
             display: "flex",

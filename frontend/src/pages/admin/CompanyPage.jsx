@@ -139,7 +139,7 @@ export default function CompanyPage() {
           marginBottom: 20,
         }}
       >
-        <h2>Company Management</h2>
+        <h2 style={{ fontWeight: "bold" }}>Company Management</h2>
         <Button
           type="primary"
           onClick={() => {

@@ -58,7 +58,9 @@ export default function CredentialsPage() {
   }, [selectedUser]);
 
   useEffect(() => {
-    if (debouncedSearchTerm) {
+    if (debouncedSearchTerm === "") {
+      fetchCredentials();
+    } else if (debouncedSearchTerm.length > 0) {
       fetchCredentials();
     }
   }, [debouncedSearchTerm]);
@@ -286,7 +288,7 @@ export default function CredentialsPage() {
           marginBottom: 20,
         }}
       >
-        <h2>Credentials</h2>
+        <h2 style={{ fontWeight: "bold" }}>Credentials Management</h2>
         <div style={{ display: "flex", gap: 10 }}>
           <Input
             placeholder="Search by name or URL..."
@@ -311,10 +313,7 @@ export default function CredentialsPage() {
           </Select>
           {user?.role?.permissions.includes("export.credit") && (
             <>
-              <Button
-                icon={<DownloadOutlined />}
-                onClick={handleExport}
-              >
+              <Button icon={<DownloadOutlined />} onClick={handleExport}>
                 Export Credentials
               </Button>
               <CSVLink
@@ -325,11 +324,17 @@ export default function CredentialsPage() {
                   "Credential Name": credential.name,
                   "Credential URL": credential.url,
                   "Username": credential.userName,
-                  "Password": credential.password,
-                  "Created At": new Date(credential.createdAt).toLocaleDateString(),
-                  "Updated At": new Date(credential.updatedAt).toLocaleDateString(),
+                  'Password': credential.password,
+                  "Created At": new Date(
+                    credential.createdAt
+                  ).toLocaleDateString(),
+                  "Updated At": new Date(
+                    credential.updatedAt
+                  ).toLocaleDateString(),
                 }))}
-                filename={`credentials-${new Date().toISOString().split("T")[0]}.csv`}
+                filename={`credentials-${
+                  new Date().toISOString().split("T")[0]
+                }.csv`}
                 style={{ display: "none" }}
               />
             </>
@@ -356,7 +361,7 @@ export default function CredentialsPage() {
         loading={loading}
         bordered
         pagination={false}
-        scroll={{ y: 'calc(100vh - 200px)' }}
+        scroll={{ y: "calc(100vh - 200px)" }}
       />
 
       <Modal

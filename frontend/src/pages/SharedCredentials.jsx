@@ -79,66 +79,68 @@ export default function SharedCredentials() {
   }
 
   return (
-    <Row justify="center" style={{ padding: "24px" }}>
-      <Col xs={24} sm={20} md={16} lg={12}>
-        <Card
-          title={credential.name}
-          extra={
-            <Button
-              type="primary"
-              icon={<LinkOutlined />}
-              onClick={() => window.open(credential.url, "_blank")}
-            >
-              Visit URL
-            </Button>
-          }
-          style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)" }}
-        >
-          <Descriptions column={1} bordered>
-            <Descriptions.Item label="URL">
-              <Space>
-                <a href={credential.url} target="_blank" rel="noreferrer">
-                  {credential.url}
-                </a>
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<CopyOutlined />}
-                  onClick={() => handleCopy(credential.url, "URL")}
-                />
-              </Space>
-            </Descriptions.Item>
+    <div>
+      <Row align="middle" justify="center" style={{ height: "100vh", padding: "24px" }}>
+        <Col xs={24} sm={20} md={16} lg={12}>
+          <Card
+            title={credential.name}
+            extra={
+              <Button
+                type="primary"
+                icon={<LinkOutlined />}
+                onClick={() => window.open(credential.url, "_blank")}
+              >
+                Visit URL
+              </Button>
+            }
+            style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)" }}
+          >
+            <Descriptions column={1} bordered>
+              <Descriptions.Item label="URL">
+                <Space>
+                  <a href={credential.url} target="_blank" rel="noreferrer">
+                    {credential.url}
+                  </a>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<CopyOutlined />}
+                    onClick={() => handleCopy(credential.url, "URL")}
+                  />
+                </Space>
+              </Descriptions.Item>
 
-            <Descriptions.Item label="Username">
-              <Space>
-                <span>{credential.userName}</span>
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<CopyOutlined />}
-                  onClick={() => handleCopy(credential.userName, "Username")}
-                />
-              </Space>
-            </Descriptions.Item>
+              <Descriptions.Item label="Username">
+                <Space>
+                  <span>{credential.userName}</span>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<CopyOutlined />}
+                    onClick={() => handleCopy(credential.userName, "Username")}
+                  />
+                </Space>
+              </Descriptions.Item>
 
-            <Descriptions.Item label="Password">
-              <Space>
-                <span>{credential.password}</span>
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<CopyOutlined />}
-                  onClick={() => handleCopy(credential.password, "Password")}
-                />
-              </Space>
-            </Descriptions.Item>
+              <Descriptions.Item label="Password">
+                <Space>
+                  <span>{credential.password}</span>
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<CopyOutlined />}
+                    onClick={() => handleCopy(credential.password, "Password")}
+                  />
+                </Space>
+              </Descriptions.Item>
 
-            <Descriptions.Item label="Shared By">
-              <span>{credential.userId?.name || "N/A"}</span>
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
-      </Col>
-    </Row>
+              <Descriptions.Item label="Shared By">
+                <span>{credential.userId?.name || "N/A"}</span>
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        </Col>
+      </Row>
+    </div>
   );
 }

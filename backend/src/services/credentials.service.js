@@ -101,47 +101,53 @@ exports.shareCredential = async (credentialId, userId, shareData) => {
     throw new ApiError(404, "Credential not found");
   }
 
-  let recipients = [];
-
   // Handle individual sharing by email
   if (shareData.email) {
     const recipient = await User.findOne({ email: shareData.email });
     if (!recipient) {
       throw new ApiError(404, "Recipient user not found");
     }
-    recipients.push({
-      email: shareData.email,
-      userId: recipient._id,
-      name: recipient.name,
+
+    const shareToken = generateShareToken();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    const shareRecord = new CredentialShareToken({
+      credentialId,
+      shareToken,
+      recipientEmail: shareData.email,
+      recipientUserId: recipient._id,
+      ownerId: userId,
+      expiresAt,
     });
+
+    await shareRecord.save();
+
+    await sendShareEmail(
+      shareData.email,
+      recipient.name,
+      credential.name,
+      shareToken,
+      expiresAt
+    );
+
+    return {
+      message: `Credential shared successfully with 1 recipient`,
+      recipients: [{ email: shareData.email, name: recipient.name }],
+    };
   }
 
-  // Handle departmental sharing
   if (shareData.department) {
     const department = await Department.findById(shareData.department);
     if (!department) {
       throw new ApiError(404, "Department not found");
     }
 
-    const departmentUsers = await User.find({
-      department: shareData.department,
-    });
+    const departmentUsers = await User.find({ department: shareData.department });
 
     if (departmentUsers.length === 0) {
       throw new ApiError(404, "No users found in the specified department");
     }
 
-    recipients = departmentUsers.map((user) => ({
-      email: user.email,
-      userId: user._id,
-      name: user.name,
-    }));
-  }
-
-  // Generate tokens and send emails to each recipient
-  const shareRecords = [];
-
-  for (const recipient of recipients) {
     const shareToken = generateShareToken();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
@@ -149,37 +155,32 @@ exports.shareCredential = async (credentialId, userId, shareData) => {
     const shareRecord = new CredentialShareToken({
       credentialId,
       shareToken,
-      recipientEmail: recipient.email,
-      recipientUserId: recipient.userId,
+      departmentId: shareData.department,
       ownerId: userId,
       expiresAt,
     });
 
     await shareRecord.save();
 
-    // Send email with secure link
-    await sendShareEmail(
-      recipient.email,
-      recipient.name,
-      credential.name,
-      shareToken,
-      expiresAt
-    );
+    for (const user of departmentUsers) {
+      try {
+        await sendShareEmail(user.email, user.name, credential.name, shareToken, expiresAt);
+      } catch (err) {
+        console.error(`Failed to send department share email to ${user.email}:`, err);
+      }
+    }
 
-    shareRecords.push(shareRecord);
+    return {
+      message: `Credential shared successfully with ${departmentUsers.length} recipient(s) via department`,
+      recipients: departmentUsers.map((u) => ({ email: u.email, name: u.name })),
+    };
   }
 
-  return {
-    message: `Credential shared successfully with ${recipients.length} recipient(s)`,
-    recipients: recipients.map((r) => ({ email: r.email, name: r.name })),
-  };
+  throw new ApiError(400, "No valid share target provided");
 };
 
 exports.accessSharedCredential = async (shareToken, userId) => {
-  const shareRecord = await CredentialShareToken.findOne({
-    shareToken,
-    recipientUserId: userId,
-  });
+  const shareRecord = await CredentialShareToken.findOne({ shareToken });
 
   if (!shareRecord) {
     throw new ApiError(404, "Invalid share token or access denied");
@@ -189,17 +190,33 @@ exports.accessSharedCredential = async (shareToken, userId) => {
     throw new ApiError(401, "Share token has expired");
   }
 
-  if (shareRecord.accessed) {
-    throw new ApiError(403, "This credential share has already been accessed");
-  }
-
   const credential = await Credentials.findById(shareRecord.credentialId).populate("userId");
 
   if (!credential) {
     throw new ApiError(404, "Shared credential not found");
   }
 
-  // Mark as accessed
+  if (shareRecord.departmentId) {
+    const requestingUser = await User.findById(userId);
+    if (!requestingUser) {
+      throw new ApiError(404, "Requesting user not found");
+    }
+
+    if (!requestingUser.department || requestingUser.department.toString() !== shareRecord.departmentId.toString()) {
+      throw new ApiError(403, "Access denied: not a member of the shared department");
+    }
+
+    return credential;
+  }
+
+  if (!shareRecord.recipientUserId || shareRecord.recipientUserId.toString() !== userId.toString()) {
+    throw new ApiError(404, "Invalid share token or access denied");
+  }
+
+  if (shareRecord.accessed) {
+    throw new ApiError(403, "This credential share has already been accessed");
+  }
+
   shareRecord.accessed = true;
   shareRecord.accessedAt = new Date();
   await shareRecord.save();

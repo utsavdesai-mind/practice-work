@@ -175,7 +175,7 @@ export default function DepartmentPage() {
           justifyContent: "space-between",
         }}
       >
-        <h2>Department Management</h2>
+        <h2 style={{ fontWeight: "bold" }}>Department Management</h2>
         {user?.role?.permissions.includes("create.dept") && (
           <Button type="primary" onClick={() => openModal()}>
             Add Department

@@ -15,12 +15,18 @@ const credentialShareTokenSchema = new mongoose.Schema(
     },
     recipientEmail: {
       type: String,
-      required: true,
+      required: false,
     },
     recipientUserId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
+    },
+    departmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Department",
+      required: false,
+      index: true,
     },
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
