@@ -15,8 +15,14 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await registerUser(values);
-      message.success("Registration successful! Please login.");
+      const res = await registerUser(values);
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoading(false);
+        return;
+      }
+
+      message.success(res.data.message);
       navigate("/login");
     } catch (err) {
       handleError(err);

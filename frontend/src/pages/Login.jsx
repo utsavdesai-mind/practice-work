@@ -18,6 +18,13 @@ export default function Login() {
     setLoading(true);
     try {
       const res = await loginUser(values);
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoading(false);
+        return;
+      }
+
       const token = res.data.data.token;
       const user = res.data.data.user;
 
@@ -26,7 +33,7 @@ export default function Login() {
 
       login(token, user);
       navigate("/");
-      message.success("Login successful! Welcome to the Dashboard.");
+      message.success(res.data.message);
     } catch (err) {
       handleError(err);
     } finally {

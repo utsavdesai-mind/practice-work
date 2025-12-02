@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import {
   Table,
   Button,
@@ -10,7 +10,14 @@ import {
   Select,
   Space,
 } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  ShareAltOutlined,
+  DownloadOutlined,
+} from "@ant-design/icons";
+import { CSVLink } from "react-csv";
 import {
   getCredentials,
   createCredential,
@@ -22,6 +29,7 @@ import { getDepartments } from "../../api/departmentService";
 import { AuthContext } from "../../context/AuthContext";
 import { handleError } from "../../utils/handleError";
 import useDebounce from "../../hooks/useDebounce";
+import { getUsers } from "../../api/userService";
 
 export default function CredentialsPage() {
   const { user } = useContext(AuthContext);
@@ -37,9 +45,11 @@ export default function CredentialsPage() {
   const [searchText, setSearchText] = useState("");
   const debouncedSearchTerm = useDebounce(searchText, 500);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const csvLinkRef = useRef();
 
   useEffect(() => {
-    fetchCredentials();
+    fetchUsers();
     fetchDepartments();
   }, []);
 
@@ -61,6 +71,13 @@ export default function CredentialsPage() {
         userId: selectedUser,
         search: searchText,
       });
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoading(false);
+        return;
+      }
+
       setCredentials(res.data.data || []);
     } catch (err) {
       message.error("Failed to fetch credentials");
@@ -72,9 +89,30 @@ export default function CredentialsPage() {
   const fetchDepartments = async () => {
     try {
       const res = await getDepartments({ company: user.company._id });
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
       setDepartments(res.data.data || []);
     } catch (err) {
       handleError(err);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await getUsers({ company: user.company._id });
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
+      setUsers(res.data.data || []);
+    } catch (error) {
+      handleError(error);
     }
   };
 
@@ -83,11 +121,26 @@ export default function CredentialsPage() {
       const values = await form.validateFields();
 
       if (editId) {
-        await updateCredential(editId, values);
-        message.success("Credential updated successfully!");
+        const res = await updateCredential(editId, values);
+
+        if (res.data && !res.data.success) {
+          message.error(res.data.message);
+          return;
+        }
+
+        message.success(res.data.message);
       } else {
-        await createCredential({ company: user?.company?._id, ...values });
-        message.success("Credential added successfully!");
+        const res = await createCredential({
+          company: user?.company?._id,
+          ...values,
+        });
+
+        if (res.data && !res.data.success) {
+          message.error(res.data.message);
+          return;
+        }
+
+        message.success(res.data.message);
       }
 
       setModalOpen(false);
@@ -95,7 +148,7 @@ export default function CredentialsPage() {
       setEditId(null);
       fetchCredentials();
     } catch (err) {
-      message.error("Validation failed!");
+      handleError(err);
     }
   };
 
@@ -112,11 +165,17 @@ export default function CredentialsPage() {
 
   const handleDelete = async (id) => {
     try {
-      await deleteCredential(id);
-      message.success("Credential deleted!");
+      const res = await deleteCredential(id);
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
+      message.success(res.data.message);
       fetchCredentials();
     } catch (err) {
-      message.error("Delete failed!");
+      handleError(err);
     }
   };
 
@@ -128,15 +187,29 @@ export default function CredentialsPage() {
 
   const handleShare = async () => {
     try {
-      console.log(sharingId);
       const values = await shareForm.validateFields();
-      await shareCredential(sharingId, values);
-      message.success("Credential shared successfully!");
+      const res = await shareCredential(sharingId, values);
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
+      message.success(res.data.message);
       setShareModalOpen(false);
       setSharingId(null);
     } catch (err) {
-      message.error("Share failed");
+      handleError(err);
     }
+  };
+
+  const handleExport = () => {
+    if (credentials.length === 0) {
+      message.warning("No credentials to export");
+      return;
+    }
+
+    csvLinkRef.current?.link?.click();
   };
 
   const columns = [
@@ -168,9 +241,11 @@ export default function CredentialsPage() {
       render: (_, record) => (
         <Space>
           {user?.role?.permissions.includes("update.credit") && (
-            <Button type="link" onClick={() => handleEdit(record)}>
-              Edit
-            </Button>
+            <Button
+              primary
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            />
           )}
           {user?.role?.permissions.includes("delete.credit") && (
             <Popconfirm
@@ -179,15 +254,15 @@ export default function CredentialsPage() {
               okText="Yes"
               cancelText="No"
             >
-              <Button type="link" danger>
-                Delete
-              </Button>
+              <Button danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
           {user?.role?.permissions.includes("share.credit") && (
-            <Button type="link" onClick={() => openShareModal(record)}>
-              Share
-            </Button>
+            <Button
+              primary
+              icon={<ShareAltOutlined />}
+              onClick={() => openShareModal(record)}
+            />
           )}
         </Space>
       ),
@@ -227,15 +302,38 @@ export default function CredentialsPage() {
             value={selectedUser}
             onChange={setSelectedUser}
             style={{ width: 250 }}
-            options={[
-              ...new Map(
-                credentials.map((c) => [
-                  c.userId._id,
-                  { label: c.userId.name, value: c.userId._id },
-                ])
-              ).values(),
-            ]}
-          />
+          >
+            {users.map((user) => (
+              <Select.Option key={user._id} value={user._id}>
+                {user.name}
+              </Select.Option>
+            ))}
+          </Select>
+          {user?.role?.permissions.includes("export.credit") && (
+            <>
+              <Button
+                icon={<DownloadOutlined />}
+                onClick={handleExport}
+              >
+                Export Credentials
+              </Button>
+              <CSVLink
+                ref={csvLinkRef}
+                data={credentials.map((credential) => ({
+                  "Owner Name": credential.userId?.name || "",
+                  "Owner Email": credential.userId?.email || "",
+                  "Credential Name": credential.name,
+                  "Credential URL": credential.url,
+                  "Username": credential.userName,
+                  "Password": credential.password,
+                  "Created At": new Date(credential.createdAt).toLocaleDateString(),
+                  "Updated At": new Date(credential.updatedAt).toLocaleDateString(),
+                }))}
+                filename={`credentials-${new Date().toISOString().split("T")[0]}.csv`}
+                style={{ display: "none" }}
+              />
+            </>
+          )}
           {user?.role?.permissions.includes("create.credit") && (
             <Button
               type="primary"
@@ -258,6 +356,7 @@ export default function CredentialsPage() {
         loading={loading}
         bordered
         pagination={false}
+        scroll={{ y: 'calc(100vh - 200px)' }}
       />
 
       <Modal

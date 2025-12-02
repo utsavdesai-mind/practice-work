@@ -24,6 +24,7 @@ import { getDepartments, createDepartment } from "../../api/departmentService";
 import { AuthContext } from "../../context/AuthContext";
 import { useContext } from "react";
 import { handleError } from "../../utils/handleError";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 
 export default function UserPage() {
   const { user } = useContext(AuthContext);
@@ -48,6 +49,13 @@ export default function UserPage() {
     try {
       setLoading(true);
       const res = await getRoles({ company: user.company._id });
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoading(false);
+        return;
+      }
+
       setRoles(res.data.data);
     } catch (error) {
       handleError(error);
@@ -60,6 +68,13 @@ export default function UserPage() {
     try {
       setLoading(true);
       const res = await getDepartments({ company: user.company._id });
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoading(false);
+        return;
+      }
+
       setDepartments(res.data.data);
     } catch (error) {
       handleError(error);
@@ -72,6 +87,13 @@ export default function UserPage() {
     try {
       setLoading(true);
       const res = await getUsers({ company: user.company._id });
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoading(false);
+        return;
+      }
+
       setUsers(res.data.data);
     } catch (error) {
       handleError(error);
@@ -89,6 +111,13 @@ export default function UserPage() {
       if (role) filterParams.role = role;
 
       const res = await getUsers(filterParams);
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoading(false);
+        return;
+      }
+
       setUsers(res.data.data);
     } catch (error) {
       handleError(error);
@@ -111,14 +140,20 @@ export default function UserPage() {
 
     try {
       setCreatingRole(true);
-      await createRole({
+      const res = await createRole({
         name: newRoleName,
         company: user.company._id,
       });
-      message.success("Role created successfully");
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
+      message.success(res.data.message);
       setNewRoleName("");
       setShowAddRole(false);
-      await fetchRoles();
+      fetchRoles();
     } catch (error) {
       handleError(error);
     } finally {
@@ -134,14 +169,20 @@ export default function UserPage() {
 
     try {
       setCreatingDepartment(true);
-      await createDepartment({
+      const res = await createDepartment({
         name: newDepartmentName,
         company: user.company._id,
       });
-      message.success("Department created successfully");
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
+      message.success(res.data.message);
       setNewDepartmentName("");
       setShowAddDepartment(false);
-      await fetchDepartments();
+      fetchDepartments();
     } catch (error) {
       handleError(error);
     } finally {
@@ -155,11 +196,21 @@ export default function UserPage() {
       values.company = user.company._id;
 
       if (editData) {
-        await updateUser(editData._id, values);
-        message.success("User updated successfully");
+        const res = await updateUser(editData._id, values);
+        if (res.data && !res.data.success) {
+          message.error(res.data.message);
+          return;
+        }
+
+        message.success(res.data.message);
       } else {
-        await createUser(values);
-        message.success("User created successfully");
+        const res = await createUser(values);
+        if (res.data && !res.data.success) {
+          message.error(res.data.message);
+          return;
+        }
+
+        message.success(res.data.message);
       }
 
       form.resetFields();
@@ -173,9 +224,14 @@ export default function UserPage() {
 
   const handleDelete = async (id) => {
     try {
-      await deleteUser(id);
-      await fetchUsers();
-      message.success("User deleted successfully");
+      const res = await deleteUser(id);
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
+      fetchUsers();
+      message.success(res.data.message);
     } catch (error) {
       handleError(error);
     }
@@ -209,9 +265,11 @@ export default function UserPage() {
       render: (_, record) => (
         <Space>
           {user?.role?.permissions.includes("update.user") && (
-            <Button type="link" onClick={() => openEditModal(record)}>
-              Edit
-            </Button>
+            <Button
+              primary
+              icon={<EditOutlined />}
+              onClick={() => openEditModal(record)}
+            />
           )}
           {user?.role?.permissions.includes("delete.user") && (
             <Popconfirm
@@ -220,9 +278,7 @@ export default function UserPage() {
               okText="Yes"
               cancelText="No"
             >
-              <Button type="link" danger>
-                Delete
-              </Button>
+              <Button danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
         </Space>
@@ -233,7 +289,9 @@ export default function UserPage() {
       key: "inviteUser",
       render: (_, record) =>
         record.isAccepted === true ? (
-          <Tag style={{ padding: "0 15px" }} color="blue">Already Accepted</Tag>
+          <Tag style={{ padding: "0 15px" }} color="blue">
+            Already Accepted
+          </Tag>
         ) : (
           <Button
             type="primary"
@@ -339,6 +397,7 @@ export default function UserPage() {
         dataSource={users}
         columns={filteredColumns}
         pagination={false}
+        scroll={{ y: 'calc(100vh - 200px)' }}
       />
 
       <Modal

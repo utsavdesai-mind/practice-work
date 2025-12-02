@@ -11,6 +11,7 @@ import {
   Empty,
   Spin,
   Tag,
+  Space,
 } from "antd";
 import {
   getRoles,
@@ -22,6 +23,7 @@ import {
 import { getPermissions } from "../../api/permissionService";
 import { handleError } from "../../utils/handleError";
 import { AuthContext } from "../../context/AuthContext";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 
 export default function RolePage() {
   const { user } = useContext(AuthContext);
@@ -41,6 +43,13 @@ export default function RolePage() {
     try {
       setLoadingPermissions(true);
       const res = await getPermissions();
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoadingPermissions(false);
+        return;
+      }
+
       setPermissions(res.data.data || []);
     } catch (err) {
       handleError(err);
@@ -53,6 +62,13 @@ export default function RolePage() {
     try {
       setLoading(true);
       const res = await getRoles({ company: user.company._id });
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoading(false);
+        return;
+      }
+
       setRoles(res.data.data || []);
     } catch (err) {
       handleError(err);
@@ -72,11 +88,21 @@ export default function RolePage() {
       values.company = user.company._id;
 
       if (editRole) {
-        await updateRole(editRole._id, values);
-        message.success("Role updated successfully");
+        const res = await updateRole(editRole._id, values);
+        if (res.data && !res.data.success) {
+          message.error(res.data.message);
+          return;
+        }
+
+        message.success(res.data.message);
       } else {
-        await createRole(values);
-        message.success("Role created successfully");
+        const res = await createRole(values);
+        if (res.data && !res.data.success) {
+          message.error(res.data.message);
+          return;
+        }
+
+        message.success(res.data.message);
       }
 
       form.resetFields();
@@ -90,9 +116,15 @@ export default function RolePage() {
 
   const handleDelete = async (id) => {
     try {
-      await deleteRole(id);
+      const res = await deleteRole(id);
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
       fetchRoles();
-      message.success("Role deleted");
+      message.success(res.data.message);
     } catch (err) {
       handleError(err);
     }
@@ -137,10 +169,17 @@ export default function RolePage() {
   const handlePermissionAssign = async () => {
     try {
       setLoadingPermissions(true);
-      await assignPermissions(selectedRole._id, {
+      const res = await assignPermissions(selectedRole._id, {
         permissions: selectedPermissions,
       });
-      message.success("Permissions assigned successfully");
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoadingPermissions(false);
+        return;
+      }
+
+      message.success(res.data.message);
       setPermissionModalOpen(false);
       setSelectedRole(null);
       setSelectedPermissions([]);
@@ -204,11 +243,13 @@ export default function RolePage() {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
-        <>
+        <Space>
           {user?.role?.permissions.includes("update.role") && (
-            <Button type="link" onClick={() => openEditModal(record)}>
-              Edit
-            </Button>
+            <Button
+              primary
+              icon={<EditOutlined />}
+              onClick={() => openEditModal(record)}
+            />
           )}
           {user?.role?.permissions.includes("delete.role") && (
             <Popconfirm
@@ -217,12 +258,10 @@ export default function RolePage() {
               cancelText="No"
               onConfirm={() => handleDelete(record._id)}
             >
-              <Button type="link" danger>
-                Delete
-              </Button>
+              <Button danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
-        </>
+        </Space>
       ),
     },
   ];
@@ -270,6 +309,7 @@ export default function RolePage() {
         dataSource={roles}
         columns={filteredColumns}
         pagination={false}
+        scroll={{ y: 'calc(100vh - 200px)' }}
       />
 
       <Modal
@@ -337,7 +377,14 @@ export default function RolePage() {
                     >
                       📦 {module}
                     </h4>
-                    <div style={{ marginLeft: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div
+                      style={{
+                        marginLeft: 12,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                      }}
+                    >
                       {perms.map((perm) => (
                         <Checkbox key={perm._id} value={perm._id}>
                           <span style={{ fontSize: "13px" }}>

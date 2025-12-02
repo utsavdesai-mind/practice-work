@@ -1,7 +1,14 @@
 import { Layout, Menu, Button } from "antd";
-import { LogoutOutlined, DashboardOutlined, UsergroupAddOutlined, ContactsOutlined, SwapOutlined, KeyOutlined } from "@ant-design/icons";
-import { Link, useNavigate } from "react-router-dom";
-import { useContext } from "react";
+import {
+  LogoutOutlined,
+  DashboardOutlined,
+  UsergroupAddOutlined,
+  ContactsOutlined,
+  SwapOutlined,
+  KeyOutlined,
+} from "@ant-design/icons";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 const { Header, Sider, Content } = Layout;
@@ -9,6 +16,17 @@ const { Header, Sider, Content } = Layout;
 export default function AdminLayout({ children }) {
   const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [selectedKey, setSelectedKey] = useState(location.pathname);
+
+  useEffect(() => {
+    setSelectedKey(location.pathname);
+  }, [location.pathname]);
+
+  const handleClick = (e) => {
+    setSelectedKey(e.key);
+  };
 
   return (
     <Layout style={{ height: "100vh" }}>
@@ -16,27 +34,32 @@ export default function AdminLayout({ children }) {
         <div style={{ color: "white", padding: 20, fontSize: 18 }}>
           {user?.company?.name || "Admin Dashboard"}
         </div>
-        <Menu theme="dark">
-          <Menu.Item key="dashboard" icon={<DashboardOutlined />}>
+        <Menu
+          theme="dark"
+          onClick={handleClick}
+          selectedKeys={[selectedKey]}
+          mode="inline"
+        >
+          <Menu.Item key="/" icon={<DashboardOutlined />}>
             <Link to="/">Dashboard</Link>
           </Menu.Item>
           {user?.role?.permissions.includes("get.role") && (
-            <Menu.Item key="roles" icon={<SwapOutlined />}>
+            <Menu.Item key="/roles" icon={<SwapOutlined />}>
               <Link to="/roles">Roles</Link>
             </Menu.Item>
           )}
           {user?.role?.permissions.includes("get.dept") && (
-            <Menu.Item key="department" icon={<ContactsOutlined />}>
+            <Menu.Item key="/departments" icon={<ContactsOutlined />}>
               <Link to="/departments">Departments</Link>
             </Menu.Item>
           )}
           {user?.role?.permissions.includes("get.credit") && (
-            <Menu.Item key="credentials" icon={<KeyOutlined />}>
+            <Menu.Item key="/credentials" icon={<KeyOutlined />}>
               <Link to="/credentials">Credentials</Link>
             </Menu.Item>
           )}
           {user?.role?.permissions.includes("get.user") && (
-            <Menu.Item key="users" icon={<UsergroupAddOutlined />}>
+            <Menu.Item key="/users" icon={<UsergroupAddOutlined />}>
               <Link to="/users">Users</Link>
             </Menu.Item>
           )}

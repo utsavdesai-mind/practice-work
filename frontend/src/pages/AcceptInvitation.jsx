@@ -14,9 +14,14 @@ export default function AcceptInvitation() {
   const handleAcceptInvitation = async () => {
     try {
       const token = searchParams.get("token");
-      await acceptInvitation({ otp, token });
+      const res = await acceptInvitation({ otp, token });
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
       setAccepted(true);
-      message.success("Invitation accepted successfully. You can now log in.");
+      message.success(res.data.message);
     } catch (error) {
       handleError(error);
     }
@@ -24,12 +29,18 @@ export default function AcceptInvitation() {
 
   const handlePasswordCreation = async (values) => {
     try {
-      await createPassword({
+      const res = await createPassword({
         email: values.email,
         password: values.password,
       });
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
       navigate("/login");
-      message.success("Password created successfully. You can now log in.");
+      message.success(res.data.message);
     } catch (error) {
       handleError(error);
     }

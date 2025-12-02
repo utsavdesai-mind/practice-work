@@ -6,6 +6,7 @@ import {
   updateCompany,
   deleteCompany,
 } from "../../api/companyService";
+import { handleError } from "../../utils/handleError";
 
 export default function CompanyPage() {
   const [companies, setCompanies] = useState([]);
@@ -22,9 +23,15 @@ export default function CompanyPage() {
     try {
       setLoading(true);
       const res = await getCompanies();
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoading(false);
+        return;
+      }
+
       setCompanies(res.data.data || []);
     } catch (err) {
-      message.error("Failed to fetch companies");
+      handleError(err);
     }
     setLoading(false);
   };
@@ -34,11 +41,21 @@ export default function CompanyPage() {
       const values = await form.validateFields();
 
       if (editId) {
-        await updateCompany(editId, values);
-        message.success("Company updated successfully!");
+        const res = await updateCompany(editId, values);
+        if (res.data && !res.data.success) {
+          message.error(res.data.message);
+          return;
+        }
+
+        message.success(res.data.message);
       } else {
-        await createCompany(values);
-        message.success("Company added successfully!");
+        const res = await createCompany(values);
+        if (res.data && !res.data.success) {
+          message.error(res.data.message);
+          return;
+        }
+
+        message.success(res.data.message);
       }
 
       setModalOpen(false);
@@ -46,7 +63,7 @@ export default function CompanyPage() {
       setEditId(null);
       fetchCompanies();
     } catch (err) {
-      message.error("Validation failed!");
+      handleError(err);
     }
   };
 
@@ -58,11 +75,16 @@ export default function CompanyPage() {
 
   const handleDelete = async (id) => {
     try {
-      await deleteCompany(id);
-      message.success("Company deleted!");
+      const res = await deleteCompany(id);
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
+      message.success(res.data.message);
       fetchCompanies();
     } catch (err) {
-      message.error("Delete failed!");
+      handleError(err);
     }
   };
 
@@ -79,7 +101,7 @@ export default function CompanyPage() {
     {
       title: "Created At",
       dataIndex: "createdAt",
-      render: (text) => new Date(text).toLocaleDateString(),  
+      render: (text) => new Date(text).toLocaleDateString(),
     },
     {
       title: "Updated At",
@@ -136,6 +158,7 @@ export default function CompanyPage() {
         loading={loading}
         bordered
         pagination={false}
+        scroll={{ y: 'calc(100vh - 200px)' }}
       />
 
       <Modal

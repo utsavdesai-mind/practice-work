@@ -18,6 +18,7 @@ import {
 import { AuthContext } from "../../context/AuthContext";
 import { useContext } from "react";
 import { handleError } from "../../utils/handleError";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 
 export default function DepartmentPage() {
   const { user } = useContext(AuthContext);
@@ -27,10 +28,17 @@ export default function DepartmentPage() {
   const [editData, setEditData] = useState(null);
   const [form] = Form.useForm();
 
-  const fetchDepartments = async (companyId = "") => {
+  const fetchDepartments = async () => {
     setLoading(true);
     try {
-      const res = await getDepartments({ company: companyId });
+      const res = await getDepartments({ company: user.company._id });
+
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        setLoading(false);
+        return;
+      }
+
       setDepartments(res.data.data);
     } catch (error) {
       handleError(error);
@@ -40,7 +48,7 @@ export default function DepartmentPage() {
   };
 
   useEffect(() => {
-    fetchDepartments(user.company._id);
+    fetchDepartments();
   }, []);
 
   const openModal = (data = null) => {
@@ -55,13 +63,23 @@ export default function DepartmentPage() {
       values.company = user.company._id;
 
       if (editData) {
-        await updateDepartment(editData._id, values);
-        await fetchDepartments(user.company._id);
-        message.success("Department updated successfully");
+        const res = await updateDepartment(editData._id, values);
+        if (res.data && !res.data.success) {
+          message.error(res.data.message);
+          return;
+        }
+
+        fetchDepartments();
+        message.success(res.data.message);
       } else {
-        await createDepartment(values);
-        await fetchDepartments(user.company._id);
-        message.success("Department created successfully");
+        const res = await createDepartment(values);
+        if (res.data && !res.data.success) {
+          message.error(res.data.message);
+          return;
+        }
+
+        fetchDepartments();
+        message.success(res.data.message);
       }
 
       setVisible(false);
@@ -74,9 +92,14 @@ export default function DepartmentPage() {
 
   const handleDelete = async (id) => {
     try {
-      await deleteDepartment(id);
-      await fetchDepartments(user.company._id);
-      message.success("Department deleted");
+      const res = await deleteDepartment(id);
+      if (res.data && !res.data.success) {
+        message.error(res.data.message);
+        return;
+      }
+
+      fetchDepartments();
+      message.success(res.data.message);
     } catch (error) {
       handleError(error);
     }
@@ -110,9 +133,11 @@ export default function DepartmentPage() {
       render: (_, record) => (
         <Space>
           {user?.role?.permissions.includes("update.dept") && (
-            <Button type="link" onClick={() => openModal(record)}>
-              Edit
-            </Button>
+            <Button
+              primary
+              icon={<EditOutlined />}
+              onClick={() => openModal(record)}
+            />
           )}
           {user?.role?.permissions.includes("delete.dept") && (
             <Popconfirm
@@ -121,9 +146,7 @@ export default function DepartmentPage() {
               okText="Yes"
               cancelText="No"
             >
-              <Button danger type="link">
-                Delete
-              </Button>
+              <Button danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
         </Space>
@@ -167,6 +190,7 @@ export default function DepartmentPage() {
         rowKey="_id"
         columns={filteredColumns}
         pagination={false}
+        scroll={{ y: 'calc(100vh - 200px)' }}
       />
 
       {/* Modal Form */}
