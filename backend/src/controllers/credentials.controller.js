@@ -55,7 +55,6 @@ exports.updateCredential = async (req, res, next) => {
   try {
     const credential = await credentialsService.updateCredential(
       req.params.id,
-      req.user._id,
       req.body
     );
     return successResponse(
@@ -71,7 +70,7 @@ exports.updateCredential = async (req, res, next) => {
 
 exports.deleteCredential = async (req, res, next) => {
   try {
-    await credentialsService.deleteCredential(req.params.id, req.user._id);
+    await credentialsService.deleteCredential(req.params.id);
     return successResponse(res, "Credential deleted successfully", null, 200);
   } catch (err) {
     next(err);

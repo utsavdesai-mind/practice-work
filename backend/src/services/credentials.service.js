@@ -64,33 +64,26 @@ exports.getCredentialById = async (credentialId, userId) => {
   return credential;
 };
 
-exports.updateCredential = async (credentialId, userId, data) => {
-  const credential = await Credentials.findById(credentialId);
+exports.updateCredential = async (credentialId, data) => {
+  const credential = await Credentials.findByIdAndUpdate(credentialId, data, {
+    new: true,
+    runValidators: true,
+  });
 
   if (!credential) {
     throw new ApiError(404, "Credential not found");
   }
 
-  if (credential.userId.toString() !== userId.toString()) {
-    throw new ApiError(403, "Unauthorized to update this credential");
-  }
-
-  Object.assign(credential, data);
-  return await credential.save();
+  return credential;
 };
 
-exports.deleteCredential = async (credentialId, userId) => {
-  const credential = await Credentials.findById(credentialId);
+exports.deleteCredential = async (credentialId) => {
+  const credential = await Credentials.findByIdAndDelete(credentialId);
 
   if (!credential) {
     throw new ApiError(404, "Credential not found");
   }
 
-  if (credential.userId.toString() !== userId.toString()) {
-    throw new ApiError(403, "Unauthorized to delete this credential");
-  }
-
-  await Credentials.findByIdAndDelete(credentialId);
   return credential;
 };
 
@@ -142,7 +135,9 @@ exports.shareCredential = async (credentialId, userId, shareData) => {
       throw new ApiError(404, "Department not found");
     }
 
-    const departmentUsers = await User.find({ department: shareData.department });
+    const departmentUsers = await User.find({
+      department: shareData.department,
+    });
 
     if (departmentUsers.length === 0) {
       throw new ApiError(404, "No users found in the specified department");
@@ -164,15 +159,27 @@ exports.shareCredential = async (credentialId, userId, shareData) => {
 
     for (const user of departmentUsers) {
       try {
-        await sendShareEmail(user.email, user.name, credential.name, shareToken, expiresAt);
+        await sendShareEmail(
+          user.email,
+          user.name,
+          credential.name,
+          shareToken,
+          expiresAt
+        );
       } catch (err) {
-        console.error(`Failed to send department share email to ${user.email}:`, err);
+        console.error(
+          `Failed to send department share email to ${user.email}:`,
+          err
+        );
       }
     }
 
     return {
       message: `Credential shared successfully with ${departmentUsers.length} recipient(s) via department`,
-      recipients: departmentUsers.map((u) => ({ email: u.email, name: u.name })),
+      recipients: departmentUsers.map((u) => ({
+        email: u.email,
+        name: u.name,
+      })),
     };
   }
 
@@ -190,7 +197,9 @@ exports.accessSharedCredential = async (shareToken, userId) => {
     throw new ApiError(401, "Share token has expired");
   }
 
-  const credential = await Credentials.findById(shareRecord.credentialId).populate("userId");
+  const credential = await Credentials.findById(
+    shareRecord.credentialId
+  ).populate("userId");
 
   if (!credential) {
     throw new ApiError(404, "Shared credential not found");
@@ -202,14 +211,24 @@ exports.accessSharedCredential = async (shareToken, userId) => {
       throw new ApiError(404, "Requesting user not found");
     }
 
-    if (!requestingUser.department || requestingUser.department.toString() !== shareRecord.departmentId.toString()) {
-      throw new ApiError(403, "Access denied: not a member of the shared department");
+    if (
+      !requestingUser.department ||
+      requestingUser.department.toString() !==
+        shareRecord.departmentId.toString()
+    ) {
+      throw new ApiError(
+        403,
+        "Access denied: not a member of the shared department"
+      );
     }
 
     return credential;
   }
 
-  if (!shareRecord.recipientUserId || shareRecord.recipientUserId.toString() !== userId.toString()) {
+  if (
+    !shareRecord.recipientUserId ||
+    shareRecord.recipientUserId.toString() !== userId.toString()
+  ) {
     throw new ApiError(404, "Invalid share token or access denied");
   }
 

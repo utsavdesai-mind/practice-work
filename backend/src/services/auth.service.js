@@ -59,7 +59,7 @@ exports.register = async (data) => {
   } catch (err) {
     throw err;
   } finally {
-    session.endSession();
+    await session.endSession();
   }
 
   if (resultUser) {

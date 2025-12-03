@@ -22,8 +22,8 @@ const resolveEntityByIdOrName = async (model, data, fieldName, query = {}) => {
 };
 
 exports.createUser = async (data) => {
-  if (await User.findOne({ email: data.email })) {
-    throw new ApiError(400, "Email already exists");
+  if (await User.findOne({ email: data.email, company: data.company })) {
+    throw new ApiError(400, "Email already exists in your company");
   }
 
   data.role =

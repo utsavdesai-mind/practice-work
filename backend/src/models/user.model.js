@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: false },
     password: { type: String },
     invitationOTP: { type: String },
     invitationToken: { type: String },
@@ -25,6 +25,12 @@ const userSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
+);
+
+// This ensures that no two documents can have the same combination of role, company, and email.
+userSchema.index(
+    { role: 1, company: 1, email: 1 }, 
+    { unique: true, partialFilterExpression: { role: { $exists: true }, company: { $exists: true } } }
 );
 
 // Hash password before saving
