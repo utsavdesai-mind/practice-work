@@ -1,5 +1,6 @@
 const Credentials = require("../models/credentials.model");
 const User = require("../models/user.model");
+const Company = require("../models/company.model");
 const Department = require("../models/department.model");
 const ApiError = require("../utils/ApiError");
 const crypto = require("crypto");
@@ -21,6 +22,11 @@ const generateShareToken = () => {
 };
 
 exports.createCredential = async (userId, data) => {
+  const company = await Company.findById(data.company);
+  if (!company) {
+    throw new ApiError(404, "Company not found");
+  }
+
   const credential = new Credentials({
     ...data,
     userId,
