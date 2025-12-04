@@ -146,15 +146,23 @@ export default function RolePage() {
     setPermissionModalOpen(true);
   };
 
-  // Get permissions grouped by module
   const getPermissionsByModule = () => {
-    const filtered =
-      permissionSearchText.trim() === ""
-        ? permissions
-        : permissions.filter((p) =>
+    let filtered;
+    if (permissionSearchText.trim() === "") {
+      filtered = permissions;
+    } else {
+      const filteredSet = new Set(
+        permissions
+          .filter((p) =>
             p.label.toLowerCase().includes(permissionSearchText.toLowerCase())
-          );
-
+          )
+          .map((p) => p._id)
+      );
+      filtered = permissions.filter(
+        (p) =>
+          filteredSet.has(p._id) || selectedPermissions.includes(p._id)
+      );
+    }
     const grouped = {};
     filtered.forEach((perm) => {
       if (!grouped[perm.module]) {
