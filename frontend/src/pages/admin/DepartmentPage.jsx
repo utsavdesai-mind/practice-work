@@ -19,9 +19,11 @@ import { AuthContext } from "../../context/AuthContext";
 import { useContext } from "react";
 import { handleError } from "../../utils/handleError";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { useSyncPermissions } from "../../hooks/useSyncPermissions";
 
 export default function DepartmentPage() {
   const { user } = useContext(AuthContext);
+  useSyncPermissions();
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -51,13 +53,7 @@ export default function DepartmentPage() {
     fetchDepartments();
   }, []);
 
-  const openModal = (data = null) => {
-    setEditData(data);
-    setVisible(true);
-    form.setFieldsValue(data || { name: "", company: "" });
-  };
-
-  const handleSave = async () => {
+  const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
       values.company = user.company._id;
@@ -69,7 +65,6 @@ export default function DepartmentPage() {
           return;
         }
 
-        fetchDepartments();
         message.success(res.data.message);
       } else {
         const res = await createDepartment(values);
@@ -78,13 +73,13 @@ export default function DepartmentPage() {
           return;
         }
 
-        fetchDepartments();
         message.success(res.data.message);
       }
 
+      form.resetFields();
       setVisible(false);
       setEditData(null);
-      form.resetFields();
+      fetchDepartments();
     } catch (error) {
       handleError(error);
     }
@@ -93,6 +88,7 @@ export default function DepartmentPage() {
   const handleDelete = async (id) => {
     try {
       const res = await deleteDepartment(id);
+
       if (res.data && !res.data.success) {
         message.error(res.data.message);
         return;
@@ -105,18 +101,14 @@ export default function DepartmentPage() {
     }
   };
 
+  const openEditModal = (record) => {
+    setEditData(record);
+    form.setFieldsValue(record);
+    setVisible(true);
+  };
+
   const columns = [
-    { title: "Name", dataIndex: "name" },
-    {
-      title: "Company",
-      dataIndex: "company",
-      render: (c) => c?.name,
-    },
-    {
-      title: "Created By",
-      dataIndex: "createdBy",
-      render: (user) => (user ? `${user.name} (${user.email})` : "N/A"),
-    },
+    { title: "Department Name", dataIndex: "name" },
     {
       title: "Created At",
       dataIndex: "createdAt",
@@ -132,19 +124,19 @@ export default function DepartmentPage() {
       key: "actions",
       render: (_, record) => (
         <Space>
-          {user?.role?.permissions.includes("update.dept") && (
+          {user?.permissions.includes("update.dept") && (
             <Button
               primary
               icon={<EditOutlined />}
-              onClick={() => openModal(record)}
+              onClick={() => openEditModal(record)}
             />
           )}
-          {user?.role?.permissions.includes("delete.dept") && (
+          {user?.permissions.includes("delete.dept") && (
             <Popconfirm
-              title="Are you sure delete this department?"
-              onConfirm={() => handleDelete(record._id)}
+              title="Delete this department?"
               okText="Yes"
               cancelText="No"
+              onConfirm={() => handleDelete(record._id)}
             >
               <Button danger icon={<DeleteOutlined />} />
             </Popconfirm>
@@ -157,59 +149,64 @@ export default function DepartmentPage() {
   const filteredColumns = columns.filter((column) => {
     if (column.key === "actions") {
       return (
-        user?.role?.permissions.includes("update.dept") ||
-        user?.role?.permissions.includes("delete.dept")
+        user?.permissions.includes("update.dept") ||
+        user?.permissions.includes("delete.dept")
       );
     }
     return true;
   });
 
   return (
-    <div>
-      {/* Filter by Company */}
+    <>
       <div
         style={{
-          marginBottom: 20,
           display: "flex",
-          gap: 10,
           justifyContent: "space-between",
+          marginBottom: 15,
         }}
       >
         <h2 style={{ fontWeight: "bold" }}>Department Management</h2>
-        {user?.role?.permissions.includes("create.dept") && (
-          <Button type="primary" onClick={() => openModal()}>
+        {user?.permissions.includes("create.dept") && (
+          <Button
+            type="primary"
+            onClick={() => {
+              form.resetFields();
+              setVisible(true);
+            }}
+          >
             Add Department
           </Button>
         )}
       </div>
 
-      {/* Table */}
       <Table
+        rowKey="_id"
         loading={loading}
         dataSource={departments}
-        rowKey="_id"
         columns={filteredColumns}
         pagination={false}
         scroll={{ y: 'calc(100vh - 200px)' }}
       />
 
-      {/* Modal Form */}
       <Modal
         title={editData ? "Edit Department" : "Add Department"}
         open={visible}
-        onCancel={() => setVisible(false)}
-        onOk={handleSave}
+        onCancel={() => {
+          setVisible(false);
+          setEditData(null);
+        }}
+        onOk={handleSubmit}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             label="Department Name"
             name="name"
-            rules={[{ required: true, message: "Name is required" }]}
+            rules={[{ required: true, message: "Please enter department name" }]}
           >
             <Input placeholder="Enter department name" />
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </>
   );
 }

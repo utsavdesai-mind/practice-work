@@ -24,6 +24,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUserPermissions = (permissions) => {
+    if (user) {
+      const updatedUser = { ...user, permissions };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    }
+  };
+
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     const savedUser = localStorage.getItem("user");
@@ -37,7 +45,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, logout, updateUserPermissions }}>
       {children}
     </AuthContext.Provider>
   );

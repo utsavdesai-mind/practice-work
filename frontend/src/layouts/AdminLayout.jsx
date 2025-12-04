@@ -43,22 +43,22 @@ export default function AdminLayout({ children }) {
           <Menu.Item key="/" icon={<DashboardOutlined />}>
             <Link to="/">Dashboard</Link>
           </Menu.Item>
-          {user?.role?.permissions.includes("get.role") && (
+          {user?.permissions.includes("get.role") && (
             <Menu.Item key="/roles" icon={<SwapOutlined />}>
               <Link to="/roles">Roles</Link>
             </Menu.Item>
           )}
-          {user?.role?.permissions.includes("get.dept") && (
+          {user?.permissions.includes("get.dept") && (
             <Menu.Item key="/departments" icon={<ContactsOutlined />}>
               <Link to="/departments">Departments</Link>
             </Menu.Item>
           )}
-          {user?.role?.permissions.includes("get.credit") && (
+          {user?.permissions.includes("get.credit") && (
             <Menu.Item key="/credentials" icon={<KeyOutlined />}>
               <Link to="/credentials">Credentials</Link>
             </Menu.Item>
           )}
-          {user?.role?.permissions.includes("get.user") && (
+          {user?.permissions.includes("get.user") && (
             <Menu.Item key="/users" icon={<UsergroupAddOutlined />}>
               <Link to="/users">Users</Link>
             </Menu.Item>

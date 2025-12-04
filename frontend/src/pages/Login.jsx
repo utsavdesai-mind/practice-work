@@ -27,6 +27,7 @@ export default function Login() {
 
       const token = res.data.data.token;
       const user = res.data.data.user;
+      user.permissions = res.data.data.user.role.permissions;
 
       const payload = parseJwt(token);
       user.roleName = payload.role;

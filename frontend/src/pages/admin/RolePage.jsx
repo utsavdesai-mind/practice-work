@@ -23,10 +23,12 @@ import {
 import { getPermissions } from "../../api/permissionService";
 import { handleError } from "../../utils/handleError";
 import { AuthContext } from "../../context/AuthContext";
+import { useSyncPermissions } from "../../hooks/useSyncPermissions";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 
 export default function RolePage() {
   const { user } = useContext(AuthContext);
+  useSyncPermissions();
   const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -252,14 +254,14 @@ export default function RolePage() {
       key: "actions",
       render: (_, record) => (
         <Space>
-          {user?.role?.permissions.includes("update.role") && (
+          {user?.permissions.includes("update.role") && (
             <Button
               primary
               icon={<EditOutlined />}
               onClick={() => openEditModal(record)}
             />
           )}
-          {user?.role?.permissions.includes("delete.role") && (
+          {user?.permissions.includes("delete.role") && (
             <Popconfirm
               title="Delete this role?"
               okText="Yes"
@@ -276,12 +278,12 @@ export default function RolePage() {
 
   const filteredColumns = columns.filter((column) => {
     if (column.key === "assignPermission") {
-      return user?.role?.permissions.includes("assign.role");
+      return user?.permissions.includes("assign.role");
     }
     if (column.key === "actions") {
       return (
-        user?.role?.permissions.includes("update.role") ||
-        user?.role?.permissions.includes("delete.role")
+        user?.permissions.includes("update.role") ||
+        user?.permissions.includes("delete.role")
       );
     }
     return true;
@@ -297,7 +299,7 @@ export default function RolePage() {
         }}
       >
         <h2 style={{ fontWeight: "bold" }}>Roles Management</h2>
-        {user?.role?.permissions.includes("create.role") && (
+        {user?.permissions.includes("create.role") && (
           <Button
             type="primary"
             onClick={() => {

@@ -25,8 +25,10 @@ import { AuthContext } from "../../context/AuthContext";
 import { useContext } from "react";
 import { handleError } from "../../utils/handleError";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { useSyncPermissions } from "../../hooks/useSyncPermissions";
 
 export default function UserPage() {
+  useSyncPermissions();
   const { user } = useContext(AuthContext);
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -264,14 +266,14 @@ export default function UserPage() {
       key: "actions",
       render: (_, record) => (
         <Space>
-          {user?.role?.permissions.includes("update.user") && (
+          {user?.permissions.includes("update.user") && (
             <Button
               primary
               icon={<EditOutlined />}
               onClick={() => openEditModal(record)}
             />
           )}
-          {user?.role?.permissions.includes("delete.user") && (
+          {user?.permissions.includes("delete.user") && (
             <Popconfirm
               title="Are you sure to delete this user?"
               onConfirm={() => handleDelete(record._id)}
@@ -319,12 +321,12 @@ export default function UserPage() {
 
   const filteredColumns = columns.filter((column) => {
     if (column.key === "inviteUser") {
-      return user?.role?.permissions.includes("invite.user");
+      return user?.permissions.includes("invite.user");
     }
     if (column.key === "actions") {
       return (
-        user?.role?.permissions.includes("update.user") ||
-        user?.role?.permissions.includes("delete.user")
+        user?.permissions.includes("update.user") ||
+        user?.permissions.includes("delete.user")
       );
     }
     return true;
@@ -376,7 +378,7 @@ export default function UserPage() {
               </Select.Option>
             ))}
           </Select>
-          {user?.role?.permissions.includes("create.user") && (
+          {user?.permissions.includes("create.user") && (
             <Button
               type="primary"
               onClick={() => {
@@ -448,7 +450,7 @@ export default function UserPage() {
               <label>
                 <span style={{ color: "red" }}>*</span> Role
               </label>
-              {user?.role?.permissions.includes("create.role") && (
+              {user?.permissions.includes("create.role") && (
                 <Button
                   type="link"
                   size="small"
@@ -541,7 +543,7 @@ export default function UserPage() {
               <label>
                 <span style={{ color: "red" }}>*</span> Department
               </label>
-              {user?.role?.permissions.includes("create.dept") && (
+              {user?.permissions.includes("create.dept") && (
                 <Button
                   type="link"
                   size="small"

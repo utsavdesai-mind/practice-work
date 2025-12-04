@@ -7,8 +7,10 @@ import {
   deleteCompany,
 } from "../../api/companyService";
 import { handleError } from "../../utils/handleError";
+import { useSyncPermissions } from "../../hooks/useSyncPermissions";
 
 export default function CompanyPage() {
+  useSyncPermissions();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);

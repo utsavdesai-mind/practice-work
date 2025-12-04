@@ -1,9 +1,11 @@
 import { Card } from "antd";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { useSyncPermissions } from "../hooks/useSyncPermissions";
 
 export default function AdminDashboard() {
   const { user } = useContext(AuthContext);
+  useSyncPermissions();
 
   return (
     <Card style={{

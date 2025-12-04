@@ -1,6 +1,9 @@
 import { Card } from "antd";
+import { useSyncPermissions } from "../hooks/useSyncPermissions";
 
 export default function SuperAdminDashboard() {
+  useSyncPermissions();
+
   return (
     <Card style={{
       minHeight: "100%",

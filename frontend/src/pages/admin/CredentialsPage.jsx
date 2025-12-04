@@ -30,8 +30,10 @@ import { AuthContext } from "../../context/AuthContext";
 import { handleError } from "../../utils/handleError";
 import useDebounce from "../../hooks/useDebounce";
 import { getUsers } from "../../api/userService";
+import { useSyncPermissions } from "../../hooks/useSyncPermissions";
 
 export default function CredentialsPage() {
+  useSyncPermissions();
   const { user } = useContext(AuthContext);
   const [credentials, setCredentials] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -49,7 +51,7 @@ export default function CredentialsPage() {
   const csvLinkRef = useRef();
 
   useEffect(() => {
-    user?.role?.permissions.includes("get.user") && fetchUsers();
+    user?.permissions.includes("get.user") && fetchUsers();
     fetchDepartments();
   }, []);
 
@@ -245,14 +247,14 @@ export default function CredentialsPage() {
       title: "Actions",
       render: (_, record) => (
         <Space>
-          {user?.role?.permissions.includes("update.credit") && (
+          {user?.permissions.includes("update.credit") && (
             <Button
               primary
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
             />
           )}
-          {user?.role?.permissions.includes("delete.credit") && (
+          {user?.permissions.includes("delete.credit") && (
             <Popconfirm
               title="Are you sure to delete this credential?"
               onConfirm={() => handleDelete(record._id)}
@@ -262,7 +264,7 @@ export default function CredentialsPage() {
               <Button danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
-          {user?.role?.permissions.includes("share.credit") && (
+          {user?.permissions.includes("share.credit") && (
             <Button
               primary
               icon={<ShareAltOutlined />}
@@ -277,9 +279,9 @@ export default function CredentialsPage() {
   const filteredColumns = columns.filter(
     (col) =>
       col.title !== "Actions" ||
-      user?.role?.permissions.includes("update.credit") ||
-      user?.role?.permissions.includes("delete.credit") ||
-      user?.role?.permissions.includes("share.credit")
+      user?.permissions.includes("update.credit") ||
+      user?.permissions.includes("delete.credit") ||
+      user?.permissions.includes("share.credit")
   );
 
   return (
@@ -301,7 +303,7 @@ export default function CredentialsPage() {
             style={{ width: 300 }}
             allowClear
           />
-          {user?.role?.permissions.includes("get.user") && (
+          {user?.permissions.includes("get.user") && (
           <Select
             placeholder="Filter by User"
             allowClear
@@ -316,7 +318,7 @@ export default function CredentialsPage() {
             ))}
           </Select>
           )}
-          {user?.role?.permissions.includes("export.credit") && (
+          {user?.permissions.includes("export.credit") && (
             <>
               <Button icon={<DownloadOutlined />} onClick={handleExport}>
                 Export Credentials
@@ -344,7 +346,7 @@ export default function CredentialsPage() {
               />
             </>
           )}
-          {user?.role?.permissions.includes("create.credit") && (
+          {user?.permissions.includes("create.credit") && (
             <Button
               type="primary"
               onClick={() => {
