@@ -37,6 +37,17 @@ const credentialShareTokenSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    accessedBy: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        accessedAt: {
+          type: Date,
+        },
+      },
+    ],
     accessedAt: {
       type: Date,
     },

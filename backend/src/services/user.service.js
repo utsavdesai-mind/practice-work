@@ -5,6 +5,8 @@ const Department = require("../models/department.model");
 const ApiError = require("../utils/ApiError");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
+const CredentialShareToken = require("../models/credentialShareToken.model");
+const Credentials = require("../models/credentials.model");
 
 const resolveEntityByIdOrName = async (model, data, fieldName, query = {}) => {
   if (!data[fieldName]) return null;
@@ -115,9 +117,55 @@ exports.updateUser = async (id, data) => {
 };
 
 exports.deleteUser = async (id) => {
-  const user = await User.findByIdAndDelete(id);
-  if (!user) throw new ApiError(404, "User not found");
-  return user;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid User ID format");
+  }
+
+  const user = await User.findById(id);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const creds = await Credentials.find({ userId: id }).select("_id").lean();
+  const credIds = creds.map((c) => c._id);
+
+  const performDeletion = async () => {
+    if (credIds.length > 0) {
+      await CredentialShareToken.deleteMany({ credentialId: { $in: credIds } });
+    }
+
+    await Credentials.deleteMany({ userId: id });
+
+    const deletedUser = await User.findByIdAndDelete(id);
+    return deletedUser;
+  };
+
+  if (credIds.length === 0) {
+    return performDeletion();
+  }
+
+  const now = new Date();
+  const shareTokens = await CredentialShareToken.find({
+    credentialId: { $in: credIds },
+    expiresAt: { $gt: now }
+  });
+
+  if (!shareTokens || shareTokens.length === 0) {
+    throw new ApiError(
+      400,
+      "The user has credentials that haven't been shared yet. Please share credentials with the department first."
+    );
+  }
+
+  const notAccepted = shareTokens.filter((t) => !t.accessed);
+  if (notAccepted.length > 0) {
+    throw new ApiError(
+      400,
+      "Some shared credentials requests are still pending acceptance. Cannot delete user until all requests are accepted."
+    );
+  }
+
+  return performDeletion();
 };
 
 exports.inviteUser = async (id) => {

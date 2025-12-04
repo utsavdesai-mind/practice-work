@@ -96,7 +96,7 @@ exports.shareCredential = async (credentialId, userId, shareData) => {
 
   // Handle individual sharing by email
   if (shareData.email) {
-    const recipient = await User.findOne({ email: shareData.email });
+    const recipient = await User.findOne({ email: shareData.email, company: shareData.company });
     if (!recipient) {
       throw new ApiError(404, "Recipient user not found");
     }
@@ -220,6 +220,29 @@ exports.accessSharedCredential = async (shareToken, userId) => {
         403,
         "Access denied: not a member of the shared department"
       );
+    }
+
+    // If this department-share hasn't recorded this user's access yet, add it
+    shareRecord.accessedBy = shareRecord.accessedBy || [];
+    const alreadyAccessed = shareRecord.accessedBy.some(
+      (a) => a.userId && a.userId.toString() === userId.toString()
+    );
+
+    if (!alreadyAccessed) {
+      shareRecord.accessedBy.push({ userId: requestingUser._id, accessedAt: new Date() });
+
+      // Check if all users in the department have accessed
+      const departmentUsers = await User.find({ department: shareRecord.departmentId });
+      const uniqueAccessCount = new Set(
+        shareRecord.accessedBy.map((a) => a.userId.toString())
+      ).size;
+
+      if (departmentUsers.length > 0 && uniqueAccessCount >= departmentUsers.length) {
+        shareRecord.accessed = true;
+        shareRecord.accessedAt = new Date();
+      }
+
+      await shareRecord.save();
     }
 
     return credential;

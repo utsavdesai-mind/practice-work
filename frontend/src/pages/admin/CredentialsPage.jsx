@@ -49,7 +49,7 @@ export default function CredentialsPage() {
   const csvLinkRef = useRef();
 
   useEffect(() => {
-    fetchUsers();
+    user?.role?.permissions.includes("get.user") && fetchUsers();
     fetchDepartments();
   }, []);
 
@@ -190,7 +190,10 @@ export default function CredentialsPage() {
   const handleShare = async () => {
     try {
       const values = await shareForm.validateFields();
-      const res = await shareCredential(sharingId, values);
+      const res = await shareCredential(sharingId, {
+        company: user.company._id,
+        ...values,
+      });
 
       if (res.data && !res.data.success) {
         message.error(res.data.message);
@@ -298,6 +301,7 @@ export default function CredentialsPage() {
             style={{ width: 300 }}
             allowClear
           />
+          {user?.role?.permissions.includes("get.user") && (
           <Select
             placeholder="Filter by User"
             allowClear
@@ -311,6 +315,7 @@ export default function CredentialsPage() {
               </Select.Option>
             ))}
           </Select>
+          )}
           {user?.role?.permissions.includes("export.credit") && (
             <>
               <Button icon={<DownloadOutlined />} onClick={handleExport}>
@@ -324,7 +329,7 @@ export default function CredentialsPage() {
                   "Credential Name": credential.name,
                   "Credential URL": credential.url,
                   "Username": credential.userName,
-                  'Password': credential.password,
+                  "Password": credential.password,
                   "Created At": new Date(
                     credential.createdAt
                   ).toLocaleDateString(),

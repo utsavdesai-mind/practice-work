@@ -16,6 +16,7 @@ exports.updateCredentialSchema = Joi.object({
 }).min(1);
 
 exports.shareCredentialSchema = Joi.object({
+  company: Joi.string().required(),
   email: Joi.string().email().optional(),
   department: Joi.string().optional(),
 }).external(async (value) => {
